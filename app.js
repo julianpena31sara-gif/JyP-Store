@@ -1,5 +1,5 @@
 /* =========================================================
-   PeñaTech — Lógica de la tienda
+   J&P Store — Lógica de la tienda
    ========================================================= */
 (() => {
 'use strict';
@@ -11,9 +11,9 @@ const PH = 'data:image/svg+xml;utf8,' + encodeURIComponent(
 );
 
 const DEFAULT_SETTINGS = {
-  nombre: 'PeñaTech',
+  nombre: 'J&P Store',
   slogan: 'TU MUNDO TECH, EN UN SOLO LUGAR',
-  heroText: 'En PeñaTech encuentras los mejores productos de tecnología, con precios increíbles, envío seguro y la confianza que necesitas.',
+  heroText: 'En J&P Store encuentras los mejores productos de tecnología, con precios increíbles, envío seguro y la confianza que necesitas.',
   whatsapp: '573167913339',
   currency: 'COP',
   shipping: 10000,
