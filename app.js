@@ -5,20 +5,35 @@
 'use strict';
 
 /* ---------- CONFIGURACIÓN ---------- */
-const LS_KEY = 'penatech_v5';
+const LS_KEY = 'jyp_store_v1';
 const PH = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#050810"/><text x="50%" y="55%" font-size="60" text-anchor="middle" fill="#1a2438">IMG</text></svg>'
+  '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#050505"/><text x="50%" y="55%" font-size="60" text-anchor="middle" fill="#1a1a1a">IMG</text></svg>'
 );
+
+/* Rutas de marca (logo y banner). El sistema detecta cuál existe. */
+const BRAND_PATHS = {
+  logo: [
+    'img/marca/logo.png',
+    'img/marca/logo.jpg',
+    'img/marca/logo.webp',
+    'img/marca/logo.svg'
+  ],
+  banner: [
+    'img/marca/banner.jpg',
+    'img/marca/banner.png',
+    'img/marca/banner.webp'
+  ]
+};
 
 const DEFAULT_SETTINGS = {
   nombre: 'J&P Store',
-  slogan: 'TU MUNDO TECH, EN UN SOLO LUGAR',
-  heroText: 'En J&P Store encuentras los mejores productos de tecnología, con precios increíbles, envío seguro y la confianza que necesitas.',
+  slogan: 'TODO LO QUE NECESITAS, EN UN SOLO LUGAR',
+  heroText: 'En J&P Store encuentras todo lo que necesitas, en un solo lugar: tecnología, hogar, herramientas y mucho más, con envío seguro y la confianza que buscas.',
   whatsapp: '573167913339',
   currency: 'COP',
   shipping: 10000,
   freeFrom: 0,
-  color: '#0a84ff',
+  color: '#0d8bf0',
   pass: 'admin123'
 };
 
@@ -55,6 +70,14 @@ function probeImage(url){
     img.onerror = () => { imageCache.set(url, false); resolve(false); };
     img.src = url;
   });
+}
+
+async function findFirstExisting(paths){
+  for (const p of paths){
+    const ok = await probeImage(p);
+    if (ok) return p;
+  }
+  return null;
 }
 
 async function preloadImageCache(){
@@ -156,15 +179,17 @@ async function load(){
 }
 
 function migrateProducts(){
-  if (state.settings._migrated_v10) return;
-  const demo = demoProducts();
-  demo.forEach(d => {
-    if (!state.products.find(p => p.id === d.id)){
-      state.products.push(d);
-    }
-  });
-  state.settings._migrated_v10 = true;
-  save();
+  // Asegura que siempre haya productos demo cargados
+  if (!state.settings._migrated_jyp1){
+    const demo = demoProducts();
+    demo.forEach(d => {
+      if (!state.products.find(p => p.id === d.id)){
+        state.products.push(d);
+      }
+    });
+    state.settings._migrated_jyp1 = true;
+    save();
+  }
 }
 
 /* =========================================================
@@ -181,7 +206,6 @@ function demoProducts(){
   const taladroImgs          = Array.from({length:15}, (_,i) => `img/taladro/${i+1}.jpg`);
 
   return [
-    /* ---------- AIRPODS PRO 3 ANC ---------- */
     {
       id: 'airpods-pro-3-anc-2174138',
       nombre: 'Audifonos Airpods Pro 3 ANC',
@@ -225,8 +249,6 @@ GARANTÍAS
       destacado: true,
       activo: true
     },
-
-    /* ---------- SMART WATCH AC10 ---------- */
     {
       id: 'smart-watch-ac10-serie-10',
       nombre: 'Smart Watch AC10 Serie 10',
@@ -251,13 +273,13 @@ BATERÍA Y CARGA
 - Tiempo de carga: 1.5 a 2 horas
 
 FUNCIONES PRINCIPALES
-- Notificaciones de llamadas, mensajes y aplicaciones (WhatsApp, Facebook, Instagram, entre otras)
+- Notificaciones de llamadas, mensajes y aplicaciones
 - Monitoreo de frecuencia cardíaca
 - Medición de presión arterial y oxígeno en sangre (SpO2)
 - Registro automático del sueño
-- Modos deportivos: caminata, carrera, ciclismo, entre otros
+- Modos deportivos: caminata, carrera, ciclismo
 - Control remoto de música y cámara del teléfono
-- Alarmas, recordatorios de sedentarismo y visualización del clima
+- Alarmas, recordatorios de sedentarismo y clima
 
 VARIANTES DISPONIBLES
 - Naranja
@@ -271,11 +293,10 @@ CONTENIDO DEL EMBALAJE
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 56000,
       compara: 99900,
       costo: 0,
@@ -289,8 +310,6 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
-
-    /* ---------- ZAPATERO 6 NIVELES ---------- */
     {
       id: 'zapatero-6-niveles-2195373',
       nombre: 'Zapatero 6 Niveles Doble 10 Secciones',
@@ -298,45 +317,30 @@ GARANTÍAS
 
 Mantén tu calzado organizado y protegido con este Zapatero Organizador de 2 Columnas y 6 Niveles con Puertas Plegables. Su diseño moderno permite almacenar varios pares de zapatos ocupando poco espacio, convirtiéndose en la opción ideal para dormitorios, closets, entradas o apartamentos.
 
-Cuenta con una estructura resistente y puertas plegables que ayudan a mantener el polvo alejado del calzado, mientras facilitan un acceso rápido a cada compartimento. Además, su diseño modular permite un armado sencillo y una excelente estabilidad para el uso diario. Es perfecto para organizar zapatos, tenis, sandalias, pantuflas e incluso otros accesorios del hogar.
-
 CARACTERÍSTICAS
-- Diseño de 2 columnas y 6 niveles.
-- Puertas plegables de fácil apertura.
-- Protege el calzado del polvo y la suciedad.
-- Gran capacidad de almacenamiento.
-- Estructura resistente y estable.
-- Diseño moderno y funcional.
-- Ideal para dormitorios, closets, entradas y apartamentos.
-- Fácil de armar y limpiar.
-- Separadores en tela microperforada.
-- Puertas plásticas blandas HDPE (polietileno de alta densidad).
-- Aprovecha mejor el espacio del hogar.
-
-BENEFICIOS
-- Mantiene los zapatos organizados y siempre al alcance.
-- Ayuda a optimizar espacios pequeños.
-- Evita la acumulación de polvo sobre el calzado.
-- Su diseño cerrado brinda una apariencia más ordenada.
-- Permite almacenar diferentes tipos de calzado y otros objetos.
-- Fácil de trasladar e instalar en cualquier ambiente.
+- Diseño de 2 columnas y 6 niveles
+- Puertas plegables de fácil apertura
+- Protege el calzado del polvo y la suciedad
+- Gran capacidad de almacenamiento
+- Estructura resistente y estable
+- Separadores en tela microperforada
+- Puertas plásticas blandas HDPE
 
 ESPECIFICACIONES TÉCNICAS
-- Tipo de producto: Zapatero organizador.
-- Diseño: 2 columnas.
-- Niveles: 6.
-- Tipo de puertas: Plegables.
-- Material: Plástico resistente.
-- Uso: Interior.
-- Requiere ensamblaje: Sí.
+- Tipo: Zapatero organizador
+- Diseño: 2 columnas
+- Niveles: 6
+- Tipo de puertas: Plegables
+- Material: Plástico resistente
+- Uso: Interior
+- Requiere ensamblaje: Sí
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 60000,
       compara: 109900,
       costo: 0,
@@ -350,19 +354,12 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
-
-    /* ---------- SECADOR REDDEN PROLUXE ---------- */
     {
       id: 'secador-redden-proluxe-2140718',
       nombre: 'Secador Redden Proluxe 5000W',
       desc: `SECADOR REDDEN PROLUXE 5000W — ID: 2140718
 
-DESCRIPCIÓN DEL PRODUCTO
 El secador REDDEN Proluxe es una herramienta diseñada para lograr un secado rápido y eficiente con resultados tipo salón desde casa. Su alta potencia permite reducir el tiempo de secado, facilitando el peinado y dejando un acabado más uniforme.
-
-Incluye accesorios como difusor y boquillas concentradoras que permiten adaptar el flujo de aire según el estilo deseado, ya sea para alisar, dar volumen o definir ondas. Su diseño ergonómico brinda mayor comodidad durante el uso, facilitando el manejo en el día a día.
-
-Cuenta con control de temperatura y función de aire frío, lo que permite ajustar el secado según el tipo de cabello, ayudando a lograr un mejor acabado y mayor control en el peinado.
 
 CARACTERÍSTICAS
 - Potencia aproximada: 5000W
@@ -372,16 +369,14 @@ CARACTERÍSTICAS
 - Función aire frío
 - Tecnología de calor uniforme
 - Diseño ergonómico
-- Cable de alimentación
 - Uso doméstico y semiprofesional
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 70000,
       compara: 129900,
       costo: 0,
@@ -395,8 +390,6 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
-
-    /* ---------- INTERCOMUNICADOR Q58 ---------- */
     {
       id: 'intercomunicador-q58-2216196',
       nombre: 'Intercomunicador Q58',
@@ -411,17 +404,14 @@ CARACTERÍSTICAS
 - Pantalla informativa
 - Controles físicos de fácil acceso
 - Reducción inteligente de ruido
-- Función de mezcla entre intercomunicación y audio
 - Diseño resistente al agua y al polvo
-- Instalación en casco de motocicleta
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 80000,
       compara: 139900,
       costo: 0,
@@ -435,8 +425,6 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
-
-    /* ---------- PARLANTE JBL BOOMBOX 3 ---------- */
     {
       id: 'parlante-jbl-boombox-3-1583443',
       nombre: 'Parlante Jbl Boombox 3',
@@ -447,7 +435,6 @@ El JBL Boombox 3 AAA ofrece un sonido natural, con una gran claridad y precisió
 CARACTERÍSTICAS
 - Sonido natural, claro y preciso
 - Dispersión uniforme del sonido
-- Excelente reproducción de contenidos multimedia
 - Subwoofer integrado
 - Tweeter integrado
 - Alto rendimiento incluso a volumen elevado
@@ -462,18 +449,12 @@ VARIANTES DISPONIBLES
 - Azul
 - Rojo (Agotado)
 
-EMBALAJE
-- Papel burbuja o cartón
-- Vinipel negro
-- Cinta azul o amarilla
-
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 100000,
       compara: 189900,
       costo: 0,
@@ -492,77 +473,52 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
-
-    /* ---------- RADIO WALKIE TALKIE BAOFENG BF-888S ---------- */
     {
       id: 'radio-walkietalkie-baofeng-2249709',
       nombre: 'Radio Walkietalkie Baofeng 2 Radios',
       desc: `RADIO WALKIE TALKIE BAOFENG BF-888S — ID: 2249709
 
-El Baofeng BF-888S es un radiotransmisor portátil de mano diseñado para ofrecer comunicación clara, estable y de largo alcance en cualquier entorno. Su formato compacto y ergonómico permite un manejo cómodo durante largas jornadas, mientras que su estructura reforzada resiste el uso diario en campo, obra, eventos o actividades al aire libre.
-
-Este kit incluye dos radios completamente equipados, ideales para mantener contacto constante entre equipos de trabajo, personal de seguridad, guías de turismo, grupos de senderismo, campistas, conductores o cualquier persona que necesite comunicarse sin depender de señal celular.
+El Baofeng BF-888S es un radiotransmisor portátil de mano diseñado para ofrecer comunicación clara, estable y de largo alcance en cualquier entorno. Este kit incluye dos radios completamente equipados.
 
 DISEÑO Y CONSTRUCCIÓN
-- Formato: Radiotransmisor portátil de mano (walkie-talkie).
-- Estructura reforzada resistente al uso diario.
-- Diseño ergonómico con acabado antideslizante.
-- Antena extraíble tipo flexible.
-- Clip de cinturón incluido para transporte cómodo.
-- Color: Negro.
+- Formato: Radiotransmisor portátil de mano
+- Estructura reforzada resistente
+- Antena extraíble tipo flexible
+- Clip de cinturón incluido
+- Color: Negro
 
 CONECTIVIDAD Y FRECUENCIA
-- Rango de frecuencia: 400 - 470 MHz (UHF).
-- Canales disponibles: 16 canales programables.
-- Subtonos: 50 códigos CTCSS y 105 códigos DCS para reducir interferencias.
-- Potencia de salida: Hasta 5W.
-- Alcance estimado: 2 a 5 km en campo abierto, variable según el terreno, obstáculos y condiciones ambientales.
-- Compatible con accesorios estándar tipo Kenwood (audífonos, micrófonos externos, etc.).
+- Rango de frecuencia: 400 - 470 MHz (UHF)
+- Canales disponibles: 16 canales programables
+- Subtonos: 50 CTCSS y 105 DCS
+- Potencia: Hasta 5W
+- Alcance: 2 a 5 km en campo abierto
 
 FUNCIONES PRINCIPALES
-- Comunicación bidireccional de voz en tiempo real.
-- Búsqueda y escaneo automático de canales ocupados.
-- Función VOX (transmisión activada por voz, manos libres).
-- Alarma de emergencia.
-- Compuerta de silenciamiento de ruido (squelch ajustable).
-- Bloqueo de teclado para evitar cambios accidentales.
-- Ahorro de batería para mayor autonomía.
-- Anuncio de voz y tonos programables.
-- Indicador LED de transmisión y recepción.
+- Comunicación bidireccional de voz
+- Función VOX manos libres
+- Alarma de emergencia
+- Bloqueo de teclado
+- Ahorro de batería
 
 ALIMENTACIÓN
-- Batería recargable de iones de litio de alta capacidad.
-- Base de carga doble incluida (permite cargar los 2 radios a la vez).
-- Adaptador de corriente incluido.
-- Autonomía aproximada: Hasta 8 - 12 horas en uso normal.
-- Tiempo de carga: 4 a 5 horas aproximadamente.
+- Batería recargable de iones de litio
+- Base de carga doble incluida
+- Autonomía: 8 - 12 horas
+- Tiempo de carga: 4 a 5 horas
 
-CONTENIDO DEL EMBALAJE
-- 2 Radios Baofeng BF-888S.
-- 2 Baterías recargables.
-- 2 Antenas.
-- 2 Clips de cinturón.
-- 2 Cargadores individuales.
-- 1 Base de carga doble.
-- 1 Adaptador de corriente.
-- 1 Manual de usuario.
-
-USOS RECOMENDADOS
-- Equipos de trabajo en obra o industria.
-- Personal de seguridad y vigilancia.
-- Eventos, conciertos y logística.
-- Camping, senderismo y actividades outdoor.
-- Caza, pesca y deportes de aventura.
-- Grupos familiares en carretera o viajes.
-- Coordinación en almacenes, bodegas y supermercados.
+CONTENIDO
+- 2 Radios Baofeng BF-888S
+- 2 Baterías, 2 Antenas, 2 Clips
+- 2 Cargadores + Base doble
+- 1 Manual
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 75000,
       compara: 149900,
       costo: 0,
@@ -576,57 +532,47 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
-
-    /* ---------- KIT TALADRO 813 MANDRIl METÁLICO ---------- */
     {
       id: 'kit-taladro-813-mandril-2167630',
       nombre: 'Kit Taladro 813 Mandril Metalico De 12',
-      desc: `KIT TALADRO 813 MANDRIl METÁLICO DE 1/2 — ID: 2167630
+      desc: `KIT TALADRO 813 MANDRIl METÁLICO — ID: 2167630
 
-Ten siempre la herramienta adecuada para cualquier reparación, instalación o proyecto con este completo Kit de Herramientas Inalámbricas 48V. Diseñado para el hogar, taller y bricolaje, incorpora un potente taladro inalámbrico con mandril metálico de 1/2 pulgada, una característica poco común en kits de esta categoría y que proporciona una mejor sujeción de las brocas, mayor resistencia al desgaste y una vida útil superior.
-
-El kit incluye 2 baterías recargables para mayor autonomía, cargador, martillo, alicates, llave ajustable, cinta métrica, brocas, puntas y múltiples accesorios organizados dentro de un práctico maletín portátil. Todo lo necesario para perforar, atornillar, ensamblar muebles, realizar mantenimientos y afrontar tareas cotidianas sin necesidad de comprar herramientas adicionales.
-
-Su diseño compacto y organizado permite transportar todas las herramientas fácilmente y tenerlas siempre listas para cualquier trabajo.
+Ten siempre la herramienta adecuada para cualquier reparación, instalación o proyecto con este completo Kit de Herramientas Inalámbricas 48V. Diseñado para el hogar, taller y bricolaje, incorpora un potente taladro inalámbrico con mandril metálico de 1/2 pulgada.
 
 TALADRO INALÁMBRICO
-- Taladro inalámbrico percutor.
-- Mandril metálico de alta resistencia.
-- Capacidad de 1/2 pulgada (13 mm).
-- 2 baterías recargables incluidas (48V).
-- Cargador incluido.
-- Diseño ergonómico y práctico.
-- Función de percusión para taladrar en mampostería, madera y metal.
+- Taladro inalámbrico percutor
+- Mandril metálico de alta resistencia
+- Capacidad de 1/2 pulgada (13 mm)
+- 2 baterías recargables incluidas (48V)
+- Cargador incluido
+- Diseño ergonómico y práctico
 
 CONTENIDO DEL KIT
-- 1 Taladro inalámbrico percutor.
-- 2 Baterías recargables de 48V.
-- 1 Cargador de baterías.
-- 1 Martillo.
-- 1 Alicate de punta.
-- 1 Alicate universal.
-- 1 Llave ajustable.
-- 1 Cinta métrica.
-- Juego de brocas para diferentes aplicaciones.
-- Puntas para atornillar.
-- Destornilladores de precisión.
-- 1 Maletín organizador portátil.
+- 1 Taladro inalámbrico percutor
+- 2 Baterías recargables de 48V
+- 1 Cargador de baterías
+- 1 Martillo
+- 1 Alicate de punta
+- 1 Alicate universal
+- 1 Llave ajustable
+- 1 Cinta métrica
+- Juego de brocas
+- Puntas para atornillar
+- Destornilladores de precisión
+- 1 Maletín organizador portátil
 
 USOS RECOMENDADOS
-- Instalaciones y reparaciones en el hogar.
-- Ensamble de muebles y estructuras.
-- Mantenimiento general del taller.
-- Trabajos de bricolaje y manualidades.
-- Proyectos de carpintería y herrería ligera.
-- Perforación en pared, madera y metal.
+- Instalaciones y reparaciones en el hogar
+- Ensamble de muebles
+- Mantenimiento de taller
+- Trabajos de bricolaje
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
       precio: 175000,
       compara: 329900,
       costo: 0,
@@ -650,9 +596,45 @@ function applySettings(){
   const s = state.settings;
   document.documentElement.style.setProperty('--primary', s.color);
   document.documentElement.style.setProperty('--primary-hover', shadeColor(s.color, -20));
-  document.title = s.nombre + ' — Tu mundo tech, en un solo lugar';
+  document.title = s.nombre + ' — Todo lo que necesitas, en un solo lugar';
   $('heroText').textContent = s.heroText;
   $('footCopy').textContent = s.nombre + ' · Todos los derechos reservados';
+}
+
+/**
+ * Aplica el logo y el banner si existen en img/marca/.
+ */
+async function applyBrand(){
+  // --- LOGO ---
+  const logoUrl = await findFirstExisting(BRAND_PATHS.logo);
+  const brandLogo  = $('brandLogo');
+  const brandText  = $('brandText');
+  const footLogo   = $('footLogo');
+  const footText   = $('footText');
+
+  if (logoUrl){
+    if (brandLogo){
+      brandLogo.src = logoUrl;
+      brandLogo.classList.remove('hidden');
+    }
+    if (brandText) brandText.classList.add('hidden');
+    if (footLogo){
+      footLogo.src = logoUrl;
+      footLogo.classList.remove('hidden');
+    }
+    if (footText) footText.classList.add('hidden');
+  }
+
+  // --- BANNER ---
+  const bannerUrl = await findFirstExisting(BRAND_PATHS.banner);
+  const heroSection = $('heroSection');
+  const heroBanner  = $('heroBanner');
+
+  if (bannerUrl && heroSection && heroBanner){
+    heroBanner.style.backgroundImage = `url('${bannerUrl}')`;
+    heroBanner.classList.remove('hidden');
+    heroSection.classList.add('has-banner');
+  }
 }
 
 /* ---------- NAV DINÁMICO ---------- */
@@ -1614,6 +1596,7 @@ async function init(){
   await preloadImageCache();
 
   applySettings();
+  await applyBrand();
   bindEvents();
   renderAll();
   renderThumbs();
