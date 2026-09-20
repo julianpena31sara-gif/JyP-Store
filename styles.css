@@ -76,11 +76,14 @@ svg{display:block;flex-shrink:0}
   max-width:1400px;margin:0 auto;padding:0 24px;height:88px;
   display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;
 }
-.brand{display:flex;align-items:center;gap:12px;flex-shrink:0;min-width:0}
+.brand{display:flex;align-items:center;gap:12px;flex-shrink:0;min-width:0;
+       transition:opacity .2s ease}
 .brand-logo{
   display:block;height:60px;width:auto;max-width:220px;
   object-fit:contain;border-radius:8px;
+  opacity:0;transition:opacity .35s ease;
 }
+.brand-logo[src]:not([src=""]){opacity:1}
 .brand-text{display:flex;flex-direction:column;gap:2px;line-height:1;min-width:0}
 .brand-text.hidden{display:none}
 .brand-logo.hidden{display:none}
@@ -154,8 +157,11 @@ svg{display:block;flex-shrink:0}
   position:absolute;inset:0;
   background-size:cover;background-position:center;background-repeat:no-repeat;
   z-index:0;
+  opacity:0;transition:opacity .45s ease;
+  will-change:opacity;
 }
 .hero-banner.hidden{display:none}
+.hero-banner:not(.hidden){opacity:1}
 .hero-banner:not(.hidden)::after{
   content:'';position:absolute;inset:0;
   background:linear-gradient(90deg,
@@ -260,6 +266,8 @@ svg{display:block;flex-shrink:0}
   display:flex;flex-direction:column;
   transition:.28s cubic-bezier(.4,0,.2,1);
   position:relative;
+  content-visibility:auto;
+  contain-intrinsic-size:1px 380px;
 }
 .card-prod:hover{
   transform:translateY(-4px);border-color:var(--border-2);
@@ -271,6 +279,15 @@ svg{display:block;flex-shrink:0}
 }
 .prod-img img{width:100%;height:100%;object-fit:cover;transition:.5s}
 .card-prod:hover .prod-img img{transform:scale(1.06)}
+.prod-img.is-loading{
+  background:linear-gradient(100deg,#050505 30%,#121212 50%,#050505 70%);
+  background-size:200% 100%;
+  animation:skeleton-shimmer 1.4s infinite linear;
+}
+@keyframes skeleton-shimmer{
+  0%{background-position:200% 0}
+  100%{background-position:-200% 0}
+}
 .tag-badge{
   position:absolute;top:12px;left:12px;padding:5px 10px;
   border-radius:6px;font-size:10.5px;font-weight:800;
@@ -441,7 +458,7 @@ svg{display:block;flex-shrink:0}
   padding:6px 12px;border-radius:999px;
   font-size:11px;font-weight:700;letter-spacing:.5px;
   display:flex;align-items:center;gap:6px;
-  opacity:0;transition:.2s;pointer-events:none;
+  opacity:0;transition:opacity .18s ease;pointer-events:none;
 }
 .detail-gal .main:hover .zoom-hint{opacity:1}
 .thumbs-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}

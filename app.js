@@ -1,5 +1,5 @@
 /* =========================================================
-   J&P Store — Lógica de la tienda
+   J&P Store — Lógica de la tienda (OPTIMIZADO)
    ========================================================= */
 (() => {
 'use strict';
@@ -10,7 +10,8 @@ const PH = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#050505"/><text x="50%" y="55%" font-size="60" text-anchor="middle" fill="#1a1a1a">IMG</text></svg>'
 );
 
-/* Rutas de marca (logo y banner). El sistema detecta cuál existe. */
+const MAX_IMG_CANDIDATES = 8;
+
 const BRAND_PATHS = {
   logo: [
     'img/marca/logo.png',
@@ -22,6 +23,13 @@ const BRAND_PATHS = {
     'img/marca/banner.jpg',
     'img/marca/banner.png',
     'img/marca/banner.webp'
+  ],
+  favicon: [
+    'img/marca/favicon.png',
+    'img/marca/favicon.jpg',
+    'img/marca/favicon.svg',
+    'img/marca/favicon.ico',
+    'favicon.ico'
   ]
 };
 
@@ -57,7 +65,7 @@ const state = {
   lbIndex: 0
 };
 
-/* ---------- CACHÉ DE IMÁGENES ---------- */
+/* ---------- CACHÉ DE IMÁGENES EN MEMORIA ---------- */
 const imageCache = new Map();
 
 function probeImage(url){
@@ -80,14 +88,11 @@ async function findFirstExisting(paths){
   return null;
 }
 
-async function preloadImageCache(){
-  const urls = new Set();
-  state.products.forEach(p => (p.img || []).forEach(u => urls.add(u)));
-  state.tempImages.forEach(u => urls.add(u));
-  await Promise.all([...urls].map(probeImage));
+function getPrimaryImage(p){
+  return (p.img && p.img[0]) || PH;
 }
 
-function getValidImages(p){
+function getKnownValidImages(p){
   const arr = p.img || [];
   const valid = arr.filter(u => imageCache.get(u) !== false);
   return valid.length ? valid : [PH];
@@ -154,13 +159,35 @@ function shadeColor(hex, percent){
   return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
+/* =========================================================
+   MANEJADOR DE ERROR DE IMAGEN EN CASCADA
+   ========================================================= */
+window.handleImgError = function(imgEl){
+  const pid = imgEl.dataset.pid;
+  const idx = Number(imgEl.dataset.idx || 0);
+  const p = state.products.find(x => x.id === pid);
+  if (!p || !p.img || !p.img.length){
+    imgEl.onerror = null;
+    imgEl.src = PH;
+    return;
+  }
+  const next = idx + 1;
+  if (next < Math.min(p.img.length, MAX_IMG_CANDIDATES)){
+    imgEl.dataset.idx = next;
+    imgEl.src = p.img[next];
+  } else {
+    imgEl.onerror = null;
+    imgEl.src = PH;
+  }
+};
+
 /* ---------- PERSISTENCIA ---------- */
 function save(){
   try { localStorage.setItem(LS_KEY, JSON.stringify(state)); }
   catch { toast('Espacio lleno. Usa URLs de imágenes en vez de subir archivos.'); }
 }
 
-async function load(){
+function load(){
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (raw){
@@ -179,7 +206,6 @@ async function load(){
 }
 
 function migrateProducts(){
-  // Asegura que siempre haya productos demo cargados
   if (!state.settings._migrated_jyp1){
     const demo = demoProducts();
     demo.forEach(d => {
@@ -196,14 +222,15 @@ function migrateProducts(){
    PRODUCTOS DE EJEMPLO
    ========================================================= */
 function demoProducts(){
-  const airpodsImgs          = Array.from({length:15}, (_,i) => `img/airpods/${i+1}.jpg`);
-  const watchImgs            = Array.from({length:15}, (_,i) => `img/smartwatch/${i+1}.jpg`);
-  const zapateroImgs         = Array.from({length:15}, (_,i) => `img/zapatero/${i+1}.jpg`);
-  const secadorImgs          = Array.from({length:15}, (_,i) => `img/secador/${i+1}.jpg`);
-  const intercomunicadorImgs = Array.from({length:15}, (_,i) => `img/intercomunicador/${i+1}.jpg`);
-  const parlanteImgs         = Array.from({length:15}, (_,i) => `img/parlante/${i+1}.jpg`);
-  const baofengImgs          = Array.from({length:15}, (_,i) => `img/baofeng/${i+1}.jpg`);
-  const taladroImgs          = Array.from({length:15}, (_,i) => `img/taladro/${i+1}.jpg`);
+  const mk = folder => Array.from({length:15}, (_,i) => `img/${folder}/${i+1}.jpg`);
+  const airpodsImgs          = mk('airpods');
+  const watchImgs            = mk('smartwatch');
+  const zapateroImgs         = mk('zapatero');
+  const secadorImgs          = mk('secador');
+  const intercomunicadorImgs = mk('intercomunicador');
+  const parlanteImgs         = mk('parlante');
+  const baofengImgs          = mk('baofeng');
+  const taladroImgs          = mk('taladro');
 
   return [
     {
@@ -277,19 +304,14 @@ FUNCIONES PRINCIPALES
 - Monitoreo de frecuencia cardíaca
 - Medición de presión arterial y oxígeno en sangre (SpO2)
 - Registro automático del sueño
-- Modos deportivos: caminata, carrera, ciclismo
-- Control remoto de música y cámara del teléfono
-- Alarmas, recordatorios de sedentarismo y clima
+- Modos deportivos
+- Control remoto de música y cámara
+- Alarmas y recordatorios
 
 VARIANTES DISPONIBLES
 - Naranja
 - Blanco
 - Negro
-
-CONTENIDO DEL EMBALAJE
-- 1 Smart Watch AC10
-- 1 Cable de carga magnética USB
-- 1 Manual de usuario
 
 --------------------------------------------------
 GARANTÍAS
@@ -315,24 +337,21 @@ GARANTÍAS
       nombre: 'Zapatero 6 Niveles Doble 10 Secciones',
       desc: `ZAPATERO 6 NIVELES DOBLE 10 SECCIONES — ID: 2195373
 
-Mantén tu calzado organizado y protegido con este Zapatero Organizador de 2 Columnas y 6 Niveles con Puertas Plegables. Su diseño moderno permite almacenar varios pares de zapatos ocupando poco espacio, convirtiéndose en la opción ideal para dormitorios, closets, entradas o apartamentos.
+Mantén tu calzado organizado y protegido con este Zapatero Organizador de 2 Columnas y 6 Niveles con Puertas Plegables.
 
 CARACTERÍSTICAS
 - Diseño de 2 columnas y 6 niveles
 - Puertas plegables de fácil apertura
-- Protege el calzado del polvo y la suciedad
+- Protege el calzado del polvo
 - Gran capacidad de almacenamiento
 - Estructura resistente y estable
 - Separadores en tela microperforada
-- Puertas plásticas blandas HDPE
 
 ESPECIFICACIONES TÉCNICAS
 - Tipo: Zapatero organizador
 - Diseño: 2 columnas
 - Niveles: 6
-- Tipo de puertas: Plegables
 - Material: Plástico resistente
-- Uso: Interior
 - Requiere ensamblaje: Sí
 
 --------------------------------------------------
@@ -359,7 +378,7 @@ GARANTÍAS
       nombre: 'Secador Redden Proluxe 5000W',
       desc: `SECADOR REDDEN PROLUXE 5000W — ID: 2140718
 
-El secador REDDEN Proluxe es una herramienta diseñada para lograr un secado rápido y eficiente con resultados tipo salón desde casa. Su alta potencia permite reducir el tiempo de secado, facilitando el peinado y dejando un acabado más uniforme.
+El secador REDDEN Proluxe es una herramienta diseñada para lograr un secado rápido y eficiente con resultados tipo salón desde casa.
 
 CARACTERÍSTICAS
 - Potencia aproximada: 5000W
@@ -367,7 +386,6 @@ CARACTERÍSTICAS
 - Incluye boquillas concentradoras
 - Control de temperatura
 - Función aire frío
-- Tecnología de calor uniforme
 - Diseño ergonómico
 - Uso doméstico y semiprofesional
 
@@ -395,16 +413,15 @@ GARANTÍAS
       nombre: 'Intercomunicador Q58',
       desc: `INTERCOMUNICADOR Q58 — ID: 2216196
 
-El intercomunicador para casco Q58 Max ofrece comunicación inalámbrica, reproducción de música y gestión de llamadas durante recorridos en motocicleta. Integra pantalla informativa, controles físicos de fácil acceso, reducción inteligente de ruido y función de mezcla entre intercomunicación y audio. Su diseño resistente al agua y al polvo permite utilizarlo con mayor confianza en diferentes condiciones de conducción.
+El intercomunicador para casco Q58 Max ofrece comunicación inalámbrica, reproducción de música y gestión de llamadas durante recorridos en motocicleta.
 
 CARACTERÍSTICAS
 - Comunicación inalámbrica entre cascos
 - Reproducción de música
 - Gestión de llamadas
 - Pantalla informativa
-- Controles físicos de fácil acceso
 - Reducción inteligente de ruido
-- Diseño resistente al agua y al polvo
+- Resistente al agua y al polvo
 
 --------------------------------------------------
 GARANTÍAS
@@ -430,18 +447,18 @@ GARANTÍAS
       nombre: 'Parlante Jbl Boombox 3',
       desc: `PARLANTE JBL BOOMBOX 3 — ID: 1583443
 
-El JBL Boombox 3 AAA ofrece un sonido natural, con una gran claridad y precisión, que se dispersa de manera uniforme. Un parlante que asegura potencia y calidad por igual en la reproducción de contenidos multimedia. (Réplica)
+El JBL Boombox 3 AAA ofrece un sonido natural, con una gran claridad y precisión. (Réplica)
 
 CARACTERÍSTICAS
 - Sonido natural, claro y preciso
 - Dispersión uniforme del sonido
 - Subwoofer integrado
 - Tweeter integrado
-- Alto rendimiento incluso a volumen elevado
+- Alto rendimiento a volumen elevado
 - Diseño versátil y funcional
 
 ESPECIFICACIONES
-- Medidas aproximadas: 34 x 20 x 10 cm
+- Medidas: 34 x 20 x 10 cm
 
 VARIANTES DISPONIBLES
 - Camuflado
@@ -478,7 +495,7 @@ GARANTÍAS
       nombre: 'Radio Walkietalkie Baofeng 2 Radios',
       desc: `RADIO WALKIE TALKIE BAOFENG BF-888S — ID: 2249709
 
-El Baofeng BF-888S es un radiotransmisor portátil de mano diseñado para ofrecer comunicación clara, estable y de largo alcance en cualquier entorno. Este kit incluye dos radios completamente equipados.
+El Baofeng BF-888S es un radiotransmisor portátil de mano con comunicación clara, estable y de largo alcance. Este kit incluye 2 radios completamente equipados.
 
 DISEÑO Y CONSTRUCCIÓN
 - Formato: Radiotransmisor portátil de mano
@@ -488,24 +505,16 @@ DISEÑO Y CONSTRUCCIÓN
 - Color: Negro
 
 CONECTIVIDAD Y FRECUENCIA
-- Rango de frecuencia: 400 - 470 MHz (UHF)
-- Canales disponibles: 16 canales programables
+- Rango: 400 - 470 MHz (UHF)
+- Canales: 16 programables
 - Subtonos: 50 CTCSS y 105 DCS
 - Potencia: Hasta 5W
 - Alcance: 2 a 5 km en campo abierto
-
-FUNCIONES PRINCIPALES
-- Comunicación bidireccional de voz
-- Función VOX manos libres
-- Alarma de emergencia
-- Bloqueo de teclado
-- Ahorro de batería
 
 ALIMENTACIÓN
 - Batería recargable de iones de litio
 - Base de carga doble incluida
 - Autonomía: 8 - 12 horas
-- Tiempo de carga: 4 a 5 horas
 
 CONTENIDO
 - 2 Radios Baofeng BF-888S
@@ -537,7 +546,7 @@ GARANTÍAS
       nombre: 'Kit Taladro 813 Mandril Metalico De 12',
       desc: `KIT TALADRO 813 MANDRIl METÁLICO — ID: 2167630
 
-Ten siempre la herramienta adecuada para cualquier reparación, instalación o proyecto con este completo Kit de Herramientas Inalámbricas 48V. Diseñado para el hogar, taller y bricolaje, incorpora un potente taladro inalámbrico con mandril metálico de 1/2 pulgada.
+Ten siempre la herramienta adecuada para cualquier reparación, instalación o proyecto con este completo Kit de Herramientas Inalámbricas 48V.
 
 TALADRO INALÁMBRICO
 - Taladro inalámbrico percutor
@@ -560,12 +569,6 @@ CONTENIDO DEL KIT
 - Puntas para atornillar
 - Destornilladores de precisión
 - 1 Maletín organizador portátil
-
-USOS RECOMENDADOS
-- Instalaciones y reparaciones en el hogar
-- Ensamble de muebles
-- Mantenimiento de taller
-- Trabajos de bricolaje
 
 --------------------------------------------------
 GARANTÍAS
@@ -602,39 +605,105 @@ function applySettings(){
 }
 
 /**
- * Aplica el logo y el banner si existen en img/marca/.
+ * Aplica logo, banner y favicon SIN bloquear el render.
  */
 async function applyBrand(){
-  // --- LOGO ---
-  const logoUrl = await findFirstExisting(BRAND_PATHS.logo);
-  const brandLogo  = $('brandLogo');
-  const brandText  = $('brandText');
-  const footLogo   = $('footLogo');
-  const footText   = $('footText');
+  try {
+    const [logoUrl, bannerUrl, faviconUrl] = await Promise.all([
+      findFirstExisting(BRAND_PATHS.logo),
+      findFirstExisting(BRAND_PATHS.banner),
+      findFirstExisting(BRAND_PATHS.favicon)
+    ]);
 
-  if (logoUrl){
-    if (brandLogo){
-      brandLogo.src = logoUrl;
-      brandLogo.classList.remove('hidden');
+    // --- LOGO ---
+    if (logoUrl){
+      const brandLogo = $('brandLogo');
+      const brandText = $('brandText');
+      const footLogo  = $('footLogo');
+      const footText  = $('footText');
+      if (brandLogo){
+        brandLogo.onload = () => brandLogo.style.opacity = 1;
+        brandLogo.src = logoUrl;
+        brandLogo.classList.remove('hidden');
+      }
+      if (brandText) brandText.classList.add('hidden');
+      if (footLogo){
+        footLogo.onload = () => footLogo.style.opacity = 1;
+        footLogo.src = logoUrl;
+        footLogo.classList.remove('hidden');
+      }
+      if (footText) footText.classList.add('hidden');
     }
-    if (brandText) brandText.classList.add('hidden');
-    if (footLogo){
-      footLogo.src = logoUrl;
-      footLogo.classList.remove('hidden');
+
+    // --- BANNER ---
+    if (bannerUrl){
+      const heroSection = $('heroSection');
+      const heroBanner  = $('heroBanner');
+      if (heroSection && heroBanner){
+        const pre = new Image();
+        pre.onload = () => {
+          heroBanner.style.backgroundImage = `url('${bannerUrl}')`;
+          heroBanner.classList.remove('hidden');
+          heroSection.classList.add('has-banner');
+        };
+        pre.src = bannerUrl;
+      }
     }
-    if (footText) footText.classList.add('hidden');
-  }
 
-  // --- BANNER ---
-  const bannerUrl = await findFirstExisting(BRAND_PATHS.banner);
-  const heroSection = $('heroSection');
-  const heroBanner  = $('heroBanner');
+    // --- FAVICON ---
+    if (faviconUrl){
+      applyFavicon(faviconUrl);
+    }
+  } catch(e){ console.warn('applyBrand error', e); }
+}
 
-  if (bannerUrl && heroSection && heroBanner){
-    heroBanner.style.backgroundImage = `url('${bannerUrl}')`;
-    heroBanner.classList.remove('hidden');
-    heroSection.classList.add('has-banner');
+/**
+ * Aplica el favicon dinámicamente.
+ * Reemplaza el <link rel="icon"> y el apple-touch-icon.
+ */
+function applyFavicon(url){
+  if (!url) return;
+
+  // Detectar tipo por extensión
+  const ext = url.split('.').pop().toLowerCase();
+  const typeMap = {
+    png:  'image/png',
+    jpg:  'image/jpeg',
+    jpeg: 'image/jpeg',
+    svg:  'image/svg+xml',
+    ico:  'image/x-icon',
+    webp: 'image/webp'
+  };
+  const type = typeMap[ext] || 'image/png';
+
+  // Reemplazar o crear el <link rel="icon">
+  let iconLink = document.getElementById('faviconLink');
+  if (!iconLink){
+    iconLink = document.createElement('link');
+    iconLink.id = 'faviconLink';
+    iconLink.rel = 'icon';
+    document.head.appendChild(iconLink);
   }
+  iconLink.type = type;
+  iconLink.href = url;
+
+  // Apple touch icon (iOS)
+  let appleLink = document.querySelector('link[rel="apple-touch-icon"]');
+  if (!appleLink){
+    appleLink = document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    document.head.appendChild(appleLink);
+  }
+  appleLink.href = url;
+
+  // Shortcut icon (algunos navegadores viejos)
+  let shortcut = document.querySelector('link[rel="shortcut icon"]');
+  if (!shortcut){
+    shortcut = document.createElement('link');
+    shortcut.rel = 'shortcut icon';
+    document.head.appendChild(shortcut);
+  }
+  shortcut.href = url;
 }
 
 /* ---------- NAV DINÁMICO ---------- */
@@ -711,8 +780,8 @@ function renderGrid(){
     return;
   }
 
-  grid.innerHTML = list.map(p => {
-    const img = getValidImages(p)[0];
+  grid.innerHTML = list.map((p, i) => {
+    const img = getPrimaryImage(p);
     const off = p.compara && p.compara > p.precio
       ? Math.round((1 - p.precio / p.compara) * 100) : 0;
     const agotado = Number(p.stock) === 0;
@@ -721,12 +790,18 @@ function renderGrid(){
       : off ? `<span class="tag-badge orange">-${off}%</span>` : '';
     const specs = (p.desc || '').split('\n').filter(l => l.trim().startsWith('-')).slice(0,2)
       .map(l => l.replace(/^-\s*/,'').split(':')[0]).join(' · ');
+    const priority = i < 4 ? 'high' : 'low';
 
     return `
     <article class="card-prod">
-      <div class="prod-img" data-open="${p.id}">
-        <img src="${esc(img)}" alt="${esc(p.nombre)}" loading="lazy"
-             onerror="this.onerror=null;this.src='${PH}'">
+      <div class="prod-img is-loading" data-open="${p.id}">
+        <img src="${esc(img)}" alt="${esc(p.nombre)}"
+             data-pid="${p.id}" data-idx="0"
+             loading="${i < 4 ? 'eager' : 'lazy'}"
+             decoding="async"
+             fetchpriority="${priority}"
+             onload="this.parentElement.classList.remove('is-loading')"
+             onerror="handleImgError(this)">
         ${badgeHtml}
       </div>
       <div class="prod-body">
@@ -771,12 +846,50 @@ function openProduct(id){
   state.selQty = 1;
   renderDetail();
   openOverlay('productModal');
+
+  verifyProductImages(p).then(() => {
+    if (state.currentProduct && state.currentProduct.id === id){
+      refreshThumbs(p);
+    }
+  });
+}
+
+async function verifyProductImages(p){
+  if (!p.img || !p.img.length) return;
+  const toCheck = p.img.slice(0, MAX_IMG_CANDIDATES);
+  await Promise.allSettled(toCheck.map(probeImage));
+}
+
+function refreshThumbs(p){
+  const thumbsRow = document.querySelector('#detailContent .thumbs-row');
+  if (!thumbsRow) return;
+  const valid = p.img.filter(u => imageCache.get(u) === true);
+  if (valid.length <= 1) return;
+
+  const current = $('mainImg').src;
+  thumbsRow.innerHTML = valid.map((im,i) => {
+    const isActive = im === current || (i === 0 && !valid.includes(current));
+    return `<img src="${esc(im)}" class="${isActive ? 'active' : ''}" data-thumb="${i}"
+      loading="lazy" decoding="async"
+      onerror="this.style.display='none'">`;
+  }).join('');
+
+  thumbsRow.querySelectorAll('[data-thumb]').forEach(t => {
+    t.onclick = () => {
+      $('mainImg').src = valid[+t.dataset.thumb];
+      thumbsRow.querySelectorAll('[data-thumb]').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    };
+  });
+
+  state.currentProduct._validImgs = valid;
 }
 
 function renderDetail(){
   const p = state.currentProduct;
   if (!p) return;
-  const imgs = getValidImages(p);
+  const known = p._validImgs && p._validImgs.length ? p._validImgs : null;
+  const imgs = known || (p.img && p.img.length ? p.img.slice(0, 6) : [PH]);
   const colors = parseColors(p.colores);
   const off = p.compara && p.compara > p.precio
     ? Math.round((1 - p.precio / p.compara) * 100) : 0;
@@ -786,7 +899,9 @@ function renderDetail(){
       <div class="detail-gal">
         <div class="main" id="mainImgWrap">
           <img id="mainImg" src="${esc(imgs[0])}" alt="${esc(p.nombre)}"
-               onerror="this.onerror=null;this.src='${PH}'">
+               loading="eager" decoding="async" fetchpriority="high"
+               data-pid="${p.id}" data-idx="0"
+               onerror="handleImgError(this)">
           <div class="zoom-hint">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -797,7 +912,8 @@ function renderDetail(){
         </div>
         ${imgs.length > 1 ? `<div class="thumbs-row">${imgs.map((im,i) =>
           `<img src="${esc(im)}" class="${i===0?'active':''}" data-thumb="${i}"
-            onerror="this.onerror=null;this.src='${PH}'">`).join('')}</div>` : ''}
+            loading="lazy" decoding="async"
+            onerror="this.style.display='none'">`).join('')}</div>` : ''}
       </div>
       <div class="detail-info">
         <span class="hero-tag" style="margin:0;font-size:10px">${esc(p.categoria || 'General')}</span>
@@ -886,9 +1002,12 @@ function bindDetailEvents(imgs){
   const mainWrap = $('mainImgWrap');
   if (mainWrap){
     mainWrap.onclick = () => {
+      const valid = (state.currentProduct._validImgs && state.currentProduct._validImgs.length)
+        ? state.currentProduct._validImgs
+        : getKnownValidImages(state.currentProduct);
       const active = root.querySelector('[data-thumb].active');
       const idx = active ? +active.dataset.thumb : 0;
-      openLightbox(imgs, idx);
+      openLightbox(valid, idx);
     };
   }
 }
@@ -924,7 +1043,8 @@ function renderLightbox(){
 
   $('lightboxThumbs').innerHTML = imgs.map((im,i) =>
     `<img src="${esc(im)}" class="${i===idx?'active':''}" data-lbthumb="${i}"
-      onerror="this.onerror=null;this.src='${PH}'">`
+      loading="lazy" decoding="async"
+      onerror="this.style.display='none'">`
   ).join('');
   $('lightboxThumbs').querySelectorAll('[data-lbthumb]').forEach(t => {
     t.onclick = () => { state.lbIndex = +t.dataset.lbthumb; renderLightbox(); };
@@ -953,7 +1073,7 @@ function cartKey(id, talla, color){ return [id, talla||'', color||''].join('||')
 function addToCart(p, talla, color, qty){
   const key = cartKey(p.id, talla, color);
   const found = state.cart.find(i => i.key === key);
-  const firstImg = getValidImages(p)[0];
+  const firstImg = getPrimaryImage(p);
   if (found) found.qty += qty;
   else state.cart.push({
     key, id: p.id, nombre: p.nombre, precio: Number(p.precio),
@@ -1008,7 +1128,8 @@ function renderCart(){
 
   body.innerHTML = state.cart.map(i => `
     <div class="cart-item">
-      <img src="${esc(i.img)}" alt="" onerror="this.onerror=null;this.src='${PH}'">
+      <img src="${esc(i.img)}" alt="" loading="lazy" decoding="async"
+           onerror="this.onerror=null;this.src='${PH}'">
       <div class="ci-info">
         <h4>${esc(i.nombre)}</h4>
         ${(i.talla||i.color) ? `<div class="var">${esc([i.talla,i.color].filter(Boolean).join(' · '))}</div>` : ''}
@@ -1170,24 +1291,22 @@ function renderAdminProducts(){
     return;
   }
 
-  list.innerHTML = state.products.map(p => {
-    const validCount = getValidImages(p).filter(u => u !== PH).length;
-    const totalCount = (p.img || []).length;
-    return `
+  list.innerHTML = state.products.map(p => `
     <div class="mini-item">
-      <img src="${esc(getValidImages(p)[0])}" onerror="this.onerror=null;this.src='${PH}'">
+      <img src="${esc(getPrimaryImage(p))}" loading="lazy" decoding="async"
+           onerror="this.onerror=null;this.src='${PH}'">
       <div class="mi-info">
         <h4>${esc(p.nombre)}</h4>
         <small>${money(p.precio)} · Stock: ${p.stock} · ${esc(p.categoria||'General')}
         ${p.activo === false ? ' · <b style="color:#ef4444">OCULTO</b>' : ''}
-        · ${validCount}/${totalCount} img</small>
+        · ${(p.img||[]).length} img</small>
       </div>
       <div class="mi-actions">
         <button class="btn btn-ghost btn-sm" data-edit="${p.id}" type="button">Editar</button>
         <button class="btn btn-danger btn-sm" data-del="${p.id}" type="button">Borrar</button>
       </div>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
 
   list.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => editProduct(b.dataset.edit));
   list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
@@ -1255,7 +1374,8 @@ function renderThumbs(){
     const cls = exists === false ? 'thumb-edit broken' : 'thumb-edit';
     return `
       <div class="${cls}">
-        <img src="${esc(im)}" onerror="this.onerror=null;this.src='${PH}'">
+        <img src="${esc(im)}" loading="lazy" decoding="async"
+             onerror="this.style.display='none'">
         <button type="button" data-rmimg="${i}">×</button>
       </div>`;
   }).join('');
@@ -1309,9 +1429,11 @@ async function saveProduct(){
   if (!precio || precio <= 0) return toast('Ingresa un precio válido');
   if (!state.tempImages.length) return toast('Agrega al menos una imagen');
 
-  await Promise.all(state.tempImages.map(probeImage));
-  const validImgs = state.tempImages.filter(u => imageCache.get(u) !== false);
-  const skipped = state.tempImages.length - validImgs.length;
+  const toCheck = state.tempImages.slice(0, MAX_IMG_CANDIDATES);
+  await Promise.allSettled(toCheck.map(probeImage));
+  const validImgs = state.tempImages.filter(u =>
+    !u.startsWith('data:') ? imageCache.get(u) !== false : true
+  );
 
   if (!validImgs.length) return toast('Ninguna imagen se pudo cargar. Verifica la ruta.');
 
@@ -1341,8 +1463,6 @@ async function saveProduct(){
     toast('Producto agregado');
   }
 
-  if (skipped > 0) toast(`${skipped} imagen(es) no encontradas, se omitieron`);
-
   save(); clearForm(); renderAdminProducts(); renderAll();
 }
 
@@ -1351,11 +1471,11 @@ async function loadImagesFromFolder(){
   const folder = $('pFolder').value.trim().replace(/\/+$/,'');
   const count  = Math.max(1, Math.min(50, Number($('pFolderCount').value) || 12));
 
-  if (!folder) return toast('Escribe la ruta de la carpeta (ej: img/airpods)');
+  if (!folder) return toast('Escribe la ruta de la carpeta');
 
   const candidates = Array.from({length:count}, (_,i) => `${folder}/${i+1}.jpg`);
   toast('Buscando imágenes...');
-  await Promise.all(candidates.map(probeImage));
+  await Promise.allSettled(candidates.map(probeImage));
   const valid = candidates.filter(u => imageCache.get(u) === true);
 
   if (!valid.length) return toast('No se encontró ninguna imagen en esa carpeta');
@@ -1587,19 +1707,16 @@ function renderAll(){
   renderCart();
 }
 
-async function init(){
-  const grid = $('grid');
-  if (grid) grid.innerHTML = '<div class="empty"><p>Cargando productos...</p></div>';
-
-  await load();
+function init(){
+  load();
   migrateProducts();
-  await preloadImageCache();
 
   applySettings();
-  await applyBrand();
   bindEvents();
   renderAll();
-  renderThumbs();
+
+  // Marca (logo, banner, favicon) en background, no bloquea
+  applyBrand();
 }
 
 init();
