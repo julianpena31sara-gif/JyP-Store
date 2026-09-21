@@ -216,7 +216,7 @@ svg{display:block;flex-shrink:0}
   overflow:hidden;border:1px solid var(--border);
   display:flex;flex-direction:column;
   transition:.28s cubic-bezier(.4,0,.2,1);position:relative;
-  content-visibility:auto;contain-intrinsic-size:1px 380px;
+  content-visibility:auto;contain-intrinsic-size:1px 420px;
 }
 .card-prod:hover{transform:translateY(-4px);border-color:var(--border-2);box-shadow:var(--shadow)}
 .prod-img{position:relative;aspect-ratio:1/1;background:#050505;cursor:pointer;overflow:hidden}
@@ -237,7 +237,7 @@ svg{display:block;flex-shrink:0}
 .tag-badge.orange{background:var(--warning);color:#fff}
 .tag-badge.purple{background:#a855f7;color:#fff}
 
-.prod-body{padding:16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.prod-body{padding:16px;display:flex;flex-direction:column;gap:8px;flex:1}
 .prod-body h3{
   font-size:14.5px;font-weight:700;line-height:1.35;color:var(--text);
   cursor:pointer;display:-webkit-box;-webkit-line-clamp:2;
@@ -251,7 +251,7 @@ svg{display:block;flex-shrink:0}
 .btn-add{
   background:var(--primary);color:#fff;padding:11px;border-radius:10px;
   font-size:13px;font-weight:700;display:flex;align-items:center;
-  justify-content:center;gap:8px;transition:.2s;
+  justify-content:center;gap:8px;transition:.2s;margin-top:4px;
 }
 .btn-add:hover{background:var(--primary-hover);box-shadow:var(--shadow-primary)}
 .btn-add:disabled{background:var(--bg-elev);color:var(--text-dim);cursor:not-allowed}
@@ -453,6 +453,76 @@ svg{display:block;flex-shrink:0}
 .hint code{background:var(--bg-elev);padding:2px 6px;border-radius:5px;font-size:11.5px;color:var(--accent)}
 .hint.center{text-align:center;margin-top:12px}
 
+/* ================= AVISO DE PRECIO VARIABLE ================= */
+.price-notice{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:11px;
+  font-weight:600;
+  color:var(--text-dim);
+  line-height:1.35;
+  margin-top:2px;
+  letter-spacing:.1px;
+}
+.price-notice svg{
+  color:var(--warning);
+  flex-shrink:0;
+  width:12px;
+  height:12px;
+}
+.price-notice strong{
+  color:var(--text-muted);
+  font-weight:700;
+}
+
+.detail-info .price-notice{
+  font-size:12.5px;
+  padding:10px 12px;
+  background:rgba(249,115,22,.08);
+  border:1px solid rgba(249,115,22,.2);
+  border-radius:10px;
+  color:#fdba74;
+  margin-top:0;
+}
+.detail-info .price-notice svg{color:var(--warning);width:14px;height:14px}
+.detail-info .price-notice strong{color:#fdba74}
+
+.cart-price-notice,
+.checkout-price-notice{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-size:11.5px;
+  font-weight:600;
+  color:var(--text-muted);
+  padding:10px 12px;
+  background:rgba(249,115,22,.08);
+  border:1px solid rgba(249,115,22,.2);
+  border-radius:10px;
+  margin-bottom:14px;
+  line-height:1.35;
+}
+.cart-price-notice svg,
+.checkout-price-notice svg{
+  color:var(--warning);
+  flex-shrink:0;
+  width:14px;
+  height:14px;
+}
+.cart-price-notice strong,
+.checkout-price-notice strong{
+  color:#fdba74;
+  font-weight:700;
+}
+
+@media (max-width:480px){
+  .price-notice{font-size:10px}
+  .detail-info .price-notice{font-size:11.5px;padding:9px 11px}
+  .cart-price-notice,
+  .checkout-price-notice{font-size:11px;padding:9px 10px}
+}
+
 /* ================= SECCIÓN ENVÍO ================= */
 .section-sep{border-top:1px solid var(--border);margin:22px 0;padding-top:22px}
 .section-label{font-size:12.5px;font-weight:800;color:var(--text);letter-spacing:.2px;margin-bottom:10px;display:block}
@@ -569,7 +639,6 @@ svg{display:block;flex-shrink:0}
 .mini-item small{color:var(--text-muted);font-size:11.5px;font-weight:500;display:block}
 .mini-item .mi-actions{display:flex;gap:6px;flex-shrink:0}
 
-/* ---------- Tag de proveedor ---------- */
 .prov-tag{
   display:inline-block;padding:2px 8px;border-radius:999px;
   background:rgba(13,139,240,.15);color:#93c5fd;
@@ -579,15 +648,6 @@ svg{display:block;flex-shrink:0}
 .prov-tag.dtech{background:rgba(13,139,240,.15);color:#93c5fd}
 .prov-tag.itm{background:rgba(168,85,247,.15);color:#d8b4fe}
 .prov-tag.emdel{background:rgba(16,185,129,.15);color:#6ee7b7}
-
-.login-box{max-width:400px;margin:50px auto;text-align:center}
-.login-box .lock{
-  width:68px;height:68px;border-radius:50%;margin:0 auto 18px;
-  background:linear-gradient(135deg,var(--primary) 0%,var(--primary-hover) 100%);
-  display:grid;place-items:center;color:#fff;box-shadow:var(--shadow-primary);
-}
-.login-box h3{font-size:19px;font-weight:800;margin-bottom:8px;color:var(--text)}
-.login-box p{color:var(--text-muted);font-size:13.5px;margin-bottom:20px;line-height:1.55}
 
 .order-card{background:var(--bg-elev);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px;transition:.2s}
 .order-card:hover{border-color:var(--primary)}

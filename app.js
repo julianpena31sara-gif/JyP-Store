@@ -163,6 +163,41 @@ function provClass(prov){
   return '';
 }
 
+/**
+ * Devuelve el HTML del aviso de precio variable.
+ * variant: 'compact' (cards) | 'detail' | 'block' (carrito/checkout)
+ */
+function priceNotice(variant = 'compact'){
+  if (variant === 'block'){
+    return `<div class="cart-price-notice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>El <strong>precio final puede variar</strong> según la ciudad de destino.</span>
+    </div>`;
+  }
+  if (variant === 'detail'){
+    return `<div class="price-notice">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>El <strong>precio puede variar</strong> según la ciudad de destino.</span>
+    </div>`;
+  }
+  return `<div class="price-notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <line x1="12" y1="8" x2="12" y2="12"/>
+      <line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span>Precio varía según ciudad</span>
+  </div>`;
+}
+
 /* ---------- MANEJADOR DE ERROR DE IMAGEN ---------- */
 window.handleImgError = function(imgEl){
   const pid = imgEl.dataset.pid;
@@ -209,8 +244,8 @@ function load(){
 }
 
 /**
- * MIGRACIÓN v3:
- * - Asigna proveedor a productos existentes sin proveedor
+ * MIGRACIÓN:
+ * - Asigna proveedor a productos existentes
  * - Actualiza badge del walkie talkie a "Más vendido"
  * - Agrega los 4 productos nuevos de Emdel
  */
@@ -560,8 +595,6 @@ GARANTÍAS
     },
 
     /* ---------- PERFUMES ---------- */
-
-    /* AFNAN 9PM */
     {
       id: 'afnan-9pm-premium-1607165',
       nombre: 'Afnan 9pm Premium',
@@ -593,8 +626,6 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('afnan'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* LATTAFA KHAMRAH */
     {
       id: 'lattafa-khamrah-1589189',
       nombre: 'Lattafa Khamrah Caja',
@@ -626,8 +657,6 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('khamrah'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* ASAD ELIXIR */
     {
       id: 'asad-elixir-2258500',
       nombre: 'Asad Elixir',
@@ -659,8 +688,6 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('asad'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* 212 VIP BLACK */
     {
       id: '212-vip-black-1551986',
       nombre: '212 Vip Black',
@@ -810,10 +837,6 @@ IDEAL PARA
 - Ver videos 360°
 - Experiencias educativas interactivas
 - Realidad virtual casera
-
-CONTENIDO
-- 1 Par de gafas VR Box
-- Banda ajustable
 
 --------------------------------------------------
 GARANTÍAS
@@ -1087,6 +1110,7 @@ function renderGrid(){
           <strong>${money(p.precio)}</strong>
           ${p.compara && p.compara > p.precio ? `<s>${money(p.compara)}</s>` : ''}
         </div>
+        ${priceNotice('compact')}
         <button class="btn-add" data-add="${p.id}" type="button" ${agotado ? 'disabled' : ''}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -1197,6 +1221,7 @@ function renderDetail(){
           ${p.compara && p.compara > p.precio ? `<s>${money(p.compara)}</s>` : ''}
           ${off ? `<span class="tag-badge orange" style="position:static;display:inline-block">-${off}%</span>` : ''}
         </div>
+        ${priceNotice('detail')}
         ${p.sku ? `<div style="font-size:12px;color:var(--text-dim)">Código: ${esc(p.sku)}</div>` : ''}
         ${p.desc ? `<div class="desc">${esc(p.desc)}</div>` : ''}
 
@@ -1427,6 +1452,7 @@ function renderCart(){
   const env = calcShipping(sub);
 
   foot.innerHTML = `
+    ${priceNotice('block')}
     <div class="totales">
       <div class="fila"><span>Subtotal</span><span>${money(sub)}</span></div>
       <div class="fila"><span>Envío</span><span>${env === 0 ? '<span class="envio-gratis">GRATIS</span>' : money(env)}</span></div>
@@ -1462,6 +1488,7 @@ function renderCheckoutResumen(){
   const sub = cartSubtotal();
   const env = calcShipping(sub);
   $('coResumen').innerHTML = `
+    ${priceNotice('block')}
     <div class="totales">
       <div class="fila"><span>${state.cart.reduce((a,i)=>a+i.qty,0)} producto(s)</span><span>${money(sub)}</span></div>
       <div class="fila"><span>Envío</span><span>${env === 0 ? '<span class="envio-gratis">GRATIS</span>' : money(env)}</span></div>
@@ -1473,10 +1500,6 @@ function getPaymentLabel(recaudo){
   return recaudo === 'Con Recaudo' ? 'Pago contra entrega' : 'Pago anticipado';
 }
 
-/**
- * Construye el mensaje de WhatsApp con el proveedor por cada producto,
- * para que al crear el pedido en Dropi sepas a quién pedirlo.
- */
 function buildOrderMessage(o){
   const L = [];
   L.push('NUEVO PEDIDO - ' + state.settings.nombre);
@@ -1508,6 +1531,8 @@ function buildOrderMessage(o){
   L.push('Subtotal: ' + money(o.subtotal));
   L.push('Envío: ' + (o.envio === 0 ? 'GRATIS' : money(o.envio)));
   L.push('TOTAL: ' + money(o.total));
+  L.push('');
+  L.push('* Nota: el precio final puede variar según la ciudad de destino.');
   L.push('');
   L.push('Pedido generado desde la tienda online');
   return L.join('\n');
