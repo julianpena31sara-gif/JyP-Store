@@ -1,5 +1,5 @@
 /* =========================================================
-   J&P Store — Lógica de la tienda (OPTIMIZADO)
+   J&P Store — Lógica de la tienda (sin contraseña admin)
    ========================================================= */
 (() => {
 'use strict';
@@ -41,8 +41,7 @@ const DEFAULT_SETTINGS = {
   currency: 'COP',
   shipping: 10000,
   freeFrom: 0,
-  color: '#0d8bf0',
-  pass: 'admin123'
+  color: '#0d8bf0'
 };
 
 /* ---------- ESTADO ---------- */
@@ -65,7 +64,7 @@ const state = {
   lbIndex: 0
 };
 
-/* ---------- CACHÉ DE IMÁGENES EN MEMORIA ---------- */
+/* ---------- CACHÉ DE IMÁGENES ---------- */
 const imageCache = new Map();
 
 function probeImage(url){
@@ -99,7 +98,7 @@ function getKnownValidImages(p){
 }
 
 /* =========================================================
-   COLORES — soportan agotados
+   COLORES
    ========================================================= */
 function parseColor(c){
   if (typeof c === 'string'){
@@ -159,9 +158,7 @@ function shadeColor(hex, percent){
   return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
-/* =========================================================
-   MANEJADOR DE ERROR DE IMAGEN EN CASCADA
-   ========================================================= */
+/* ---------- MANEJADOR DE ERROR DE IMAGEN ---------- */
 window.handleImgError = function(imgEl){
   const pid = imgEl.dataset.pid;
   const idx = Number(imgEl.dataset.idx || 0);
@@ -198,6 +195,9 @@ function load(){
         orders:   d.orders   || [],
         cart:     d.cart     || []
       });
+      // Limpia cualquier rastro de contraseña previa
+      delete state.settings.pass;
+      delete state.settings._migrated_jyp1;
     } else {
       state.products = demoProducts();
       save();
@@ -206,20 +206,20 @@ function load(){
 }
 
 function migrateProducts(){
-  if (!state.settings._migrated_jyp1){
+  if (!state.settings._migrated_jyp2){
     const demo = demoProducts();
     demo.forEach(d => {
       if (!state.products.find(p => p.id === d.id)){
         state.products.push(d);
       }
     });
-    state.settings._migrated_jyp1 = true;
+    state.settings._migrated_jyp2 = true;
     save();
   }
 }
 
 /* =========================================================
-   PRODUCTOS DE EJEMPLO
+   PRODUCTOS
    ========================================================= */
 function demoProducts(){
   const mk = folder => Array.from({length:15}, (_,i) => `img/${folder}/${i+1}.jpg`);
@@ -231,8 +231,13 @@ function demoProducts(){
   const parlanteImgs         = mk('parlante');
   const baofengImgs          = mk('baofeng');
   const taladroImgs          = mk('taladro');
+  const afnanImgs            = mk('afnan');
+  const khamrahImgs          = mk('khamrah');
+  const asadImgs             = mk('asad');
+  const vip212Imgs           = mk('vip212');
 
   return [
+    /* ---------- AIRPODS PRO 3 ANC ---------- */
     {
       id: 'airpods-pro-3-anc-2174138',
       nombre: 'Audifonos Airpods Pro 3 ANC',
@@ -276,6 +281,8 @@ GARANTÍAS
       destacado: true,
       activo: true
     },
+
+    /* ---------- SMART WATCH AC10 ---------- */
     {
       id: 'smart-watch-ac10-serie-10',
       nombre: 'Smart Watch AC10 Serie 10',
@@ -332,6 +339,8 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
+
+    /* ---------- ZAPATERO 6 NIVELES ---------- */
     {
       id: 'zapatero-6-niveles-2195373',
       nombre: 'Zapatero 6 Niveles Doble 10 Secciones',
@@ -373,6 +382,8 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
+
+    /* ---------- SECADOR REDDEN PROLUXE ---------- */
     {
       id: 'secador-redden-proluxe-2140718',
       nombre: 'Secador Redden Proluxe 5000W',
@@ -408,6 +419,8 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
+
+    /* ---------- INTERCOMUNICADOR Q58 ---------- */
     {
       id: 'intercomunicador-q58-2216196',
       nombre: 'Intercomunicador Q58',
@@ -442,6 +455,8 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
+
+    /* ---------- PARLANTE JBL BOOMBOX 3 ---------- */
     {
       id: 'parlante-jbl-boombox-3-1583443',
       nombre: 'Parlante Jbl Boombox 3',
@@ -490,6 +505,8 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
+
+    /* ---------- RADIO WALKIE TALKIE BAOFENG ---------- */
     {
       id: 'radio-walkietalkie-baofeng-2249709',
       nombre: 'Radio Walkietalkie Baofeng 2 Radios',
@@ -541,6 +558,8 @@ GARANTÍAS
       destacado: false,
       activo: true
     },
+
+    /* ---------- KIT TALADRO 813 ---------- */
     {
       id: 'kit-taladro-813-mandril-2167630',
       nombre: 'Kit Taladro 813 Mandril Metalico De 12',
@@ -588,6 +607,195 @@ GARANTÍAS
       badge: 'Nuevo',
       destacado: false,
       activo: true
+    },
+
+    /* =========================================================
+       PERFUMES
+       ========================================================= */
+
+    /* ---------- AFNAN 9PM PREMIUM ---------- */
+    {
+      id: 'afnan-9pm-premium-1607165',
+      nombre: 'Afnan 9pm Premium',
+      desc: `AFNAN 9PM PREMIUM — ID: 1607165
+
+Una fragancia masculina oriental que combina la frescura de las notas cítricas con la calidez de las maderas y especias. Diseñada para el hombre moderno que busca una estela intensa, elegante y duradera.
+
+PIRÁMIDE OLFATIVA
+- Notas de salida: Manzana, canela, lavanda, bergamota
+- Notas de corazón: Flor de azahar, lirio de los valles
+- Notas de fondo: Ámbar, vainilla, haba tonka
+
+CARACTERÍSTICAS
+- Familia olfativa: Oriental amaderada
+- Presentación: 100 ml
+- Concentración: Eau de Parfum
+- Género: Masculino
+- Duración: 8 a 12 horas
+- Estela: Intensa
+
+USO RECOMENDADO
+- Ideal para la noche, eventos especiales y salidas
+- Perfecto para climas fríos y templados
+- Aplica sobre piel limpia y puntos de pulso
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 85000,
+      compara: 169900,
+      costo: 0,
+      sku: '1607165',
+      categoria: 'Perfumes',
+      stock: 10,
+      tallas: [],
+      colores: [],
+      img: afnanImgs,
+      badge: 'Nuevo',
+      destacado: false,
+      activo: true
+    },
+
+    /* ---------- LATTAFA KHAMRAH ---------- */
+    {
+      id: 'lattafa-khamrah-1589189',
+      nombre: 'Lattafa Khamrah Caja',
+      desc: `LATTAFA KHAMRAH CAJA — ID: 1589189
+
+Una fragancia unisex envolvente que evoca la calidez de oriente medio. Su combinación de especias dulces, notas gourmand y maderas crea una estela elegante, adictiva y perfecta para cualquier ocasión.
+
+PIRÁMIDE OLFATIVA
+- Notas de salida: Canela, nuez moscada, bergamota
+- Notas de corazón: Dátiles, praliné, naranja
+- Notas de fondo: Vainilla, haba tonka, benjuí, mirra, amberwood
+
+CARACTERÍSTICAS
+- Familia olfativa: Especiada gourmand
+- Presentación: 100 ml (con caja)
+- Concentración: Eau de Parfum
+- Género: Unisex
+- Duración: 10 a 14 horas
+- Estela: Muy intensa
+
+USO RECOMENDADO
+- Ideal para la noche y climas fríos
+- Perfecto para eventos y ocasiones especiales
+- Aplica sobre puntos de pulso para mayor fijación
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 80000,
+      compara: 159900,
+      costo: 0,
+      sku: '1589189',
+      categoria: 'Perfumes',
+      stock: 10,
+      tallas: [],
+      colores: [],
+      img: khamrahImgs,
+      badge: 'Nuevo',
+      destacado: false,
+      activo: true
+    },
+
+    /* ---------- ASAD ELIXIR ---------- */
+    {
+      id: 'asad-elixir-2258500',
+      nombre: 'Asad Elixir',
+      desc: `LATTAFA ASAD ELIXIR — ID: 2258500
+
+Una versión intensificada del icónico Asad. Esta fragancia combina la potencia del tabaco y el café con la dulzura de la vainilla y un fondo amaderado, creando una firma masculina audaz y sofisticada.
+
+PIRÁMIDE OLFATIVA
+- Notas de salida: Piña, pimienta negra, bergamota
+- Notas de corazón: Café, tabaco, incienso, iris
+- Notas de fondo: Vainilla, benjuí, ámbar, cedro, cuero, pachulí
+
+CARACTERÍSTICAS
+- Familia olfativa: Amaderada especiada
+- Presentación: 100 ml
+- Concentración: Eau de Parfum
+- Género: Masculino
+- Duración: 10 a 14 horas
+- Estela: Potente y duradera
+
+USO RECOMENDADO
+- Ideal para la noche y eventos especiales
+- Perfecto para climas fríos
+- Aplica sobre puntos de pulso para mayor fijación
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 85000,
+      compara: 179900,
+      costo: 0,
+      sku: '2258500',
+      categoria: 'Perfumes',
+      stock: 10,
+      tallas: [],
+      colores: [],
+      img: asadImgs,
+      badge: 'Nuevo',
+      destacado: false,
+      activo: true
+    },
+
+    /* ---------- 212 VIP BLACK ---------- */
+    {
+      id: '212-vip-black-1551986',
+      nombre: '212 Vip Black',
+      desc: `212 VIP BLACK — ID: 1551986
+
+Una fragancia masculina moderna y elegante que combina la frescura aromática con notas oscuras y sensuales. Su carácter nocturno y sofisticado la convierten en una elección ideal para el hombre que busca destacar.
+
+PIRÁMIDE OLFATIVA
+- Notas de salida: Absenta, lavanda, hinojo
+- Notas de corazón: Pimienta negra, cardamomo
+- Notas de fondo: Cuero, vainilla, almizcle, benjuí, ámbar
+
+CARACTERÍSTICAS
+- Familia olfativa: Aromática especiada
+- Presentación: 100 ml
+- Concentración: Eau de Parfum
+- Tipo: Réplica premium de alta fijación
+- Género: Masculino
+- Duración: 8 a 10 horas
+- Estela: Intensa
+
+USO RECOMENDADO
+- Ideal para la noche y salidas
+- Perfecto para climas templados y fríos
+- Aplica sobre puntos de pulso
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 70000,
+      compara: 149900,
+      costo: 0,
+      sku: '1551986',
+      categoria: 'Perfumes',
+      stock: 10,
+      tallas: [],
+      colores: [],
+      img: vip212Imgs,
+      badge: 'Nuevo',
+      destacado: false,
+      activo: true
     }
   ];
 }
@@ -604,9 +812,6 @@ function applySettings(){
   $('footCopy').textContent = s.nombre + ' · Todos los derechos reservados';
 }
 
-/**
- * Aplica logo, banner y favicon SIN bloquear el render.
- */
 async function applyBrand(){
   try {
     const [logoUrl, bannerUrl, faviconUrl] = await Promise.all([
@@ -615,7 +820,6 @@ async function applyBrand(){
       findFirstExisting(BRAND_PATHS.favicon)
     ]);
 
-    // --- LOGO ---
     if (logoUrl){
       const brandLogo = $('brandLogo');
       const brandText = $('brandText');
@@ -635,7 +839,6 @@ async function applyBrand(){
       if (footText) footText.classList.add('hidden');
     }
 
-    // --- BANNER ---
     if (bannerUrl){
       const heroSection = $('heroSection');
       const heroBanner  = $('heroBanner');
@@ -650,33 +853,21 @@ async function applyBrand(){
       }
     }
 
-    // --- FAVICON ---
     if (faviconUrl){
       applyFavicon(faviconUrl);
     }
   } catch(e){ console.warn('applyBrand error', e); }
 }
 
-/**
- * Aplica el favicon dinámicamente.
- * Reemplaza el <link rel="icon"> y el apple-touch-icon.
- */
 function applyFavicon(url){
   if (!url) return;
-
-  // Detectar tipo por extensión
   const ext = url.split('.').pop().toLowerCase();
   const typeMap = {
-    png:  'image/png',
-    jpg:  'image/jpeg',
-    jpeg: 'image/jpeg',
-    svg:  'image/svg+xml',
-    ico:  'image/x-icon',
-    webp: 'image/webp'
+    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
+    svg: 'image/svg+xml', ico: 'image/x-icon', webp: 'image/webp'
   };
   const type = typeMap[ext] || 'image/png';
 
-  // Reemplazar o crear el <link rel="icon">
   let iconLink = document.getElementById('faviconLink');
   if (!iconLink){
     iconLink = document.createElement('link');
@@ -687,7 +878,6 @@ function applyFavicon(url){
   iconLink.type = type;
   iconLink.href = url;
 
-  // Apple touch icon (iOS)
   let appleLink = document.querySelector('link[rel="apple-touch-icon"]');
   if (!appleLink){
     appleLink = document.createElement('link');
@@ -696,7 +886,6 @@ function applyFavicon(url){
   }
   appleLink.href = url;
 
-  // Shortcut icon (algunos navegadores viejos)
   let shortcut = document.querySelector('link[rel="shortcut icon"]');
   if (!shortcut){
     shortcut = document.createElement('link');
@@ -717,7 +906,8 @@ const NAV_ICONS = {
   box:     '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
   tag:     '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
   star:    '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
-  tool:    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'
+  tool:    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+  spray:   '<path d="M9 2h6v4H9z"/><path d="M9 6v14a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><line x1="17" y1="8" x2="21" y2="8"/><line x1="17" y1="12" x2="19" y2="12"/><line x1="17" y1="16" x2="21" y2="16"/>'
 };
 
 function iconForCategory(cat){
@@ -730,6 +920,7 @@ function iconForCategory(cat){
   if (c.includes('accesor'))                            return 'box';
   if (c.includes('hogar'))                              return 'box';
   if (c.includes('herramient'))                         return 'tool';
+  if (c.includes('perfum') || c.includes('fraganc'))    return 'spray';
   if (c.includes('oferta'))                             return 'tag';
   return 'star';
 }
@@ -1514,18 +1705,7 @@ function compressImage(file, maxW = 850, quality = 0.78){
 function openOverlay(id){ $(id).classList.add('open'); }
 function closeOverlay(id){ $(id).classList.remove('open'); }
 
-function doLogin(){
-  const pass = $('adminPass').value;
-  if (pass === state.settings.pass){
-    sessionStorage.setItem('adminOK','1');
-    $('adminPass').value = '';
-    showAdminBody();
-  } else toast('Contraseña incorrecta');
-}
-
 function showAdminBody(){
-  $('adminLogin').classList.add('hidden');
-  $('adminBody').classList.remove('hidden');
   renderAdminProducts();
 }
 
@@ -1634,19 +1814,11 @@ function bindEvents(){
     lbTouchX = null;
   }, {passive:true});
 
+  /* ADMIN — Sin contraseña, entra directo */
   $('adminBtn').onclick = () => {
     openOverlay('adminModal');
-    if (sessionStorage.getItem('adminOK') === '1'){
-      showAdminBody();
-    } else {
-      $('adminLogin').classList.remove('hidden');
-      $('adminBody').classList.add('hidden');
-      setTimeout(() => $('adminPass').focus(), 100);
-    }
+    showAdminBody();
   };
-
-  $('loginBtn2').onclick = doLogin;
-  $('adminPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
   $$('.tab').forEach(t => {
     t.onclick = () => {
@@ -1715,7 +1887,6 @@ function init(){
   bindEvents();
   renderAll();
 
-  // Marca (logo, banner, favicon) en background, no bloquea
   applyBrand();
 }
 

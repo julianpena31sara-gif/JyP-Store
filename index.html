@@ -7,17 +7,14 @@
 <meta name="format-detection" content="telephone=no">
 <title>J&P Store — Todo lo que necesitas, en un solo lugar</title>
 
-<!-- Favicon dinámico: el JS lo reemplaza si encuentra img/marca/favicon.* -->
 <link id="faviconLink" rel="icon" type="image/png" href="img/marca/favicon.png">
 <link rel="apple-touch-icon" href="img/marca/favicon.png">
 
-<!-- Fuentes: precarga rápida -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="dns-prefetch" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-<!-- Precarga de marca (solo ayuda si existen) -->
 <link rel="preload" as="image" href="img/marca/logo.png">
 <link rel="preload" as="image" href="img/marca/banner.jpg">
 
@@ -278,7 +275,7 @@
   </div>
 </div>
 
-<!-- ================= ADMIN ================= -->
+<!-- ================= ADMIN (sin login) ================= -->
 <div class="overlay" id="adminModal">
   <div class="admin-panel">
     <div class="admin-head">
@@ -293,22 +290,7 @@
       </button>
     </div>
 
-    <div id="adminLogin" class="admin-scroll">
-      <div class="login-box">
-        <div class="lock">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-        </div>
-        <h3>Acceso privado</h3>
-        <p>Ingresa la contraseña para gestionar tus productos.</p>
-        <div class="field"><input type="password" id="adminPass" placeholder="Contraseña" style="text-align:center"></div>
-        <button class="btn btn-primary btn-full" id="loginBtn2" type="button">Entrar al panel</button>
-        <p class="hint center" style="margin-top:12px">Contraseña por defecto: <strong>admin123</strong></p>
-      </div>
-    </div>
-
-    <div id="adminBody" class="hidden admin-body">
+    <div id="adminBody" class="admin-body">
       <div class="tabs">
         <button class="tab active" data-tab="productos" type="button">Productos</button>
         <button class="tab" data-tab="pedidos" type="button">Pedidos</button>
