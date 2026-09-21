@@ -12,12 +12,10 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="dns-prefetch" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <link rel="preload" as="image" href="img/marca/logo.png">
 <link rel="preload" as="image" href="img/marca/banner.jpg">
-
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -59,12 +57,10 @@
   </div>
 </header>
 
-<!-- ================= NAV ================= -->
 <nav class="mainnav" id="mainNavWrap">
   <div class="mainnav-inner" id="mainNav"></div>
 </nav>
 
-<!-- ================= HERO ================= -->
 <section class="hero" id="heroSection">
   <div class="hero-banner hidden" id="heroBanner"></div>
   <div class="hero-inner">
@@ -79,7 +75,6 @@
   </div>
 </section>
 
-<!-- ================= TRUST BAR ================= -->
 <section class="trustbar">
   <div class="trustbar-inner">
     <div class="trust-item">
@@ -110,7 +105,6 @@
   </div>
 </section>
 
-<!-- ================= CATALOG ================= -->
 <section class="catalog">
   <div class="catalog-inner">
     <div class="section-head">
@@ -120,7 +114,6 @@
   </div>
 </section>
 
-<!-- ================= FOOTER ================= -->
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-col">
@@ -152,7 +145,6 @@
   </div>
 </footer>
 
-<!-- ================= CARRITO DRAWER ================= -->
 <aside class="drawer" id="cartDrawer" aria-hidden="true">
   <div class="drawer-head">
     <h3>
@@ -170,7 +162,6 @@
   <div class="drawer-foot" id="cartFoot"></div>
 </aside>
 
-<!-- ================= MODAL PRODUCTO ================= -->
 <div class="overlay" id="productModal">
   <div class="modal modal-product">
     <button class="close-btn absolute" data-close type="button" aria-label="Cerrar">
@@ -180,27 +171,21 @@
   </div>
 </div>
 
-<!-- ================= LIGHTBOX ================= -->
 <div class="lightbox" id="lightbox">
   <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Cerrar">
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
   </button>
   <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Anterior">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="15 18 9 12 15 6"/>
-    </svg>
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
   </button>
   <img class="lightbox-img" id="lightboxImg" src="" alt="">
   <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Siguiente">
-    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-      <polyline points="9 18 15 12 9 6"/>
-    </svg>
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
   </button>
   <div class="lightbox-thumbs" id="lightboxThumbs"></div>
   <div class="lightbox-counter" id="lightboxCounter"></div>
 </div>
 
-<!-- ================= MODAL CHECKOUT ================= -->
 <div class="overlay" id="checkoutModal">
   <div class="modal" style="max-width:680px">
     <button class="close-btn absolute" data-close type="button" aria-label="Cerrar">
@@ -211,14 +196,8 @@
       <p class="modal-sub">Completa tus datos y enviaremos el pedido directo a WhatsApp.</p>
 
       <div class="row2">
-        <div class="field">
-          <label>Nombre completo *</label>
-          <input id="coNombre" autocomplete="name">
-        </div>
-        <div class="field">
-          <label>Teléfono / WhatsApp *</label>
-          <input id="coTel" inputmode="tel" autocomplete="tel">
-        </div>
+        <div class="field"><label>Nombre completo *</label><input id="coNombre" autocomplete="name"></div>
+        <div class="field"><label>Teléfono / WhatsApp *</label><input id="coTel" inputmode="tel" autocomplete="tel"></div>
       </div>
 
       <div class="field">
@@ -228,14 +207,8 @@
       </div>
 
       <div class="row2">
-        <div class="field">
-          <label>Ciudad *</label>
-          <input id="coCiudad">
-        </div>
-        <div class="field">
-          <label>Departamento</label>
-          <input id="coDepto">
-        </div>
+        <div class="field"><label>Ciudad *</label><input id="coCiudad"></div>
+        <div class="field"><label>Departamento</label><input id="coDepto"></div>
       </div>
 
       <div class="section-sep">
@@ -259,10 +232,7 @@
         </div>
       </div>
 
-      <div class="field">
-        <label>Notas adicionales (opcional)</label>
-        <textarea id="coNotas" rows="2"></textarea>
-      </div>
+      <div class="field"><label>Notas adicionales (opcional)</label><textarea id="coNotas" rows="2"></textarea></div>
 
       <div class="resumen-box" id="coResumen"></div>
 
@@ -275,7 +245,6 @@
   </div>
 </div>
 
-<!-- ================= ADMIN (sin login) ================= -->
 <div class="overlay" id="adminModal">
   <div class="admin-panel">
     <div class="admin-head">
@@ -313,7 +282,14 @@
               <div class="field"><label>Costo Dropi (interno)</label><input id="pCosto" type="number" min="0" step="100"></div>
             </div>
 
-            <div class="row2">
+            <div class="row3">
+              <div class="field">
+                <label>Proveedor</label>
+                <input id="pProveedor" list="provList" placeholder="Dtech / Itm / Emdel">
+                <datalist id="provList">
+                  <option value="Dtech"><option value="Itm"><option value="Emdel">
+                </datalist>
+              </div>
               <div class="field"><label>SKU / ID en Dropi</label><input id="pSku"></div>
               <div class="field"><label>Stock disponible</label><input id="pStock" type="number" min="0" value="20"></div>
             </div>

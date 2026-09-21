@@ -1,5 +1,5 @@
 /* =========================================================
-   J&P Store — Lógica de la tienda (sin contraseña admin)
+   J&P Store — Lógica de la tienda
    ========================================================= */
 (() => {
 'use strict';
@@ -44,7 +44,6 @@ const DEFAULT_SETTINGS = {
   color: '#0d8bf0'
 };
 
-/* ---------- ESTADO ---------- */
 const state = {
   settings: { ...DEFAULT_SETTINGS },
   products: [],
@@ -97,9 +96,7 @@ function getKnownValidImages(p){
   return valid.length ? valid : [PH];
 }
 
-/* =========================================================
-   COLORES
-   ========================================================= */
+/* ---------- COLORES ---------- */
 function parseColor(c){
   if (typeof c === 'string'){
     const m = c.match(/^(.*?)\s*\(agotado\)\s*$/i);
@@ -158,6 +155,14 @@ function shadeColor(hex, percent){
   return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
 }
 
+function provClass(prov){
+  const p = (prov || '').toLowerCase().trim();
+  if (p === 'dtech') return 'dtech';
+  if (p === 'itm')   return 'itm';
+  if (p === 'emdel') return 'emdel';
+  return '';
+}
+
 /* ---------- MANEJADOR DE ERROR DE IMAGEN ---------- */
 window.handleImgError = function(imgEl){
   const pid = imgEl.dataset.pid;
@@ -195,9 +200,7 @@ function load(){
         orders:   d.orders   || [],
         cart:     d.cart     || []
       });
-      // Limpia cualquier rastro de contraseña previa
       delete state.settings.pass;
-      delete state.settings._migrated_jyp1;
     } else {
       state.products = demoProducts();
       save();
@@ -205,17 +208,50 @@ function load(){
   } catch(e){ console.warn('Error cargando datos', e); }
 }
 
+/**
+ * MIGRACIÓN v3:
+ * - Asigna proveedor a productos existentes sin proveedor
+ * - Actualiza badge del walkie talkie a "Más vendido"
+ * - Agrega los 4 productos nuevos de Emdel
+ */
 function migrateProducts(){
-  if (!state.settings._migrated_jyp2){
+  const providerMap = {
+    'airpods-pro-3-anc-2174138':     'Dtech',
+    'smart-watch-ac10-serie-10':     'Dtech',
+    'zapatero-6-niveles-2195373':    'Dtech',
+    'secador-redden-proluxe-2140718':'Dtech',
+    'intercomunicador-q58-2216196':  'Dtech',
+    'parlante-jbl-boombox-3-1583443':'Dtech',
+    'radio-walkietalkie-baofeng-2249709':'Dtech',
+    'kit-taladro-813-mandril-2167630':'Dtech',
+    'afnan-9pm-premium-1607165':     'Itm',
+    'lattafa-khamrah-1589189':       'Itm',
+    'asad-elixir-2258500':           'Itm',
+    '212-vip-black-1551986':         'Itm'
+  };
+
+  state.products.forEach(p => {
+    if (!p.proveedor && providerMap[p.id]){
+      p.proveedor = providerMap[p.id];
+    }
+  });
+
+  const wt = state.products.find(p => p.id === 'radio-walkietalkie-baofeng-2249709');
+  if (wt && wt.badge !== 'Más vendido'){
+    wt.badge = 'Más vendido';
+  }
+
+  if (!state.settings._migrated_jyp3){
     const demo = demoProducts();
     demo.forEach(d => {
       if (!state.products.find(p => p.id === d.id)){
         state.products.push(d);
       }
     });
-    state.settings._migrated_jyp2 = true;
-    save();
+    state.settings._migrated_jyp3 = true;
   }
+
+  save();
 }
 
 /* =========================================================
@@ -223,21 +259,9 @@ function migrateProducts(){
    ========================================================= */
 function demoProducts(){
   const mk = folder => Array.from({length:15}, (_,i) => `img/${folder}/${i+1}.jpg`);
-  const airpodsImgs          = mk('airpods');
-  const watchImgs            = mk('smartwatch');
-  const zapateroImgs         = mk('zapatero');
-  const secadorImgs          = mk('secador');
-  const intercomunicadorImgs = mk('intercomunicador');
-  const parlanteImgs         = mk('parlante');
-  const baofengImgs          = mk('baofeng');
-  const taladroImgs          = mk('taladro');
-  const afnanImgs            = mk('afnan');
-  const khamrahImgs          = mk('khamrah');
-  const asadImgs             = mk('asad');
-  const vip212Imgs           = mk('vip212');
 
   return [
-    /* ---------- AIRPODS PRO 3 ANC ---------- */
+    /* ---------- AIRPODS ---------- */
     {
       id: 'airpods-pro-3-anc-2174138',
       nombre: 'Audifonos Airpods Pro 3 ANC',
@@ -263,26 +287,17 @@ ALIMENTACIÓN
 
 --------------------------------------------------
 GARANTÍAS
-- Producto incompleto · 10 días (producto completo y en buen estado)
-- Mal funcionamiento · 10 días (producto completo y en buen estado)
-- Producto roto · 10 días (producto completo y en buen estado)
-- Producto diferente · 10 días
-  Si el cliente recibe un producto distinto al solicitado, se gestionará el cambio solo si no ha sido usado.`,
-      precio: 70000,
-      compara: 129900,
-      costo: 0,
-      sku: '2174138',
-      categoria: 'Tecnología',
-      stock: 20,
-      tallas: [],
-      colores: ['Blanco'],
-      img: airpodsImgs,
-      badge: 'Más vendido',
-      destacado: true,
-      activo: true
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 70000, compara: 129900, costo: 0,
+      sku: '2174138', categoria: 'Tecnología', proveedor: 'Dtech', stock: 20,
+      tallas: [], colores: ['Blanco'], img: mk('airpods'),
+      badge: 'Más vendido', destacado: true, activo: true
     },
 
-    /* ---------- SMART WATCH AC10 ---------- */
+    /* ---------- SMART WATCH ---------- */
     {
       id: 'smart-watch-ac10-serie-10',
       nombre: 'Smart Watch AC10 Serie 10',
@@ -291,34 +306,28 @@ GARANTÍAS
 DISEÑO Y PANTALLA
 - Pantalla: TFT táctil de 1.44 pulgadas
 - Resolución: 240 x 240 píxeles
-- Formato: Reloj inteligente unisex
 - Correa: Silicona intercambiable
 
 CONECTIVIDAD
 - Tecnología inalámbrica: Bluetooth 4.0 o superior
-- Compatibilidad: Android 5.0 / iOS 9.0 y versiones superiores
-- Aplicación recomendada: FitPro / HiWatch (según versión)
+- Compatibilidad: Android 5.0 / iOS 9.0 y superiores
+- App: FitPro / HiWatch
 
 BATERÍA Y CARGA
 - Capacidad: 150 mAh
-- Autonomía: 2 a 5 días dependiendo del uso
-- Tipo de carga: Magnética
-- Cable incluido: USB
-- Tiempo de carga: 1.5 a 2 horas
+- Autonomía: 2 a 5 días
+- Carga: Magnética (cable USB incluido)
+- Tiempo: 1.5 a 2 horas
 
-FUNCIONES PRINCIPALES
-- Notificaciones de llamadas, mensajes y aplicaciones
-- Monitoreo de frecuencia cardíaca
-- Medición de presión arterial y oxígeno en sangre (SpO2)
-- Registro automático del sueño
+FUNCIONES
+- Notificaciones de llamadas y apps
+- Frecuencia cardíaca y SpO2
+- Registro del sueño
 - Modos deportivos
-- Control remoto de música y cámara
-- Alarmas y recordatorios
+- Control de música y cámara
 
-VARIANTES DISPONIBLES
-- Naranja
-- Blanco
-- Negro
+VARIANTES
+- Naranja · Blanco · Negro
 
 --------------------------------------------------
 GARANTÍAS
@@ -326,21 +335,13 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 56000,
-      compara: 99900,
-      costo: 0,
-      sku: '1498729',
-      categoria: 'Tecnología',
-      stock: 15,
-      tallas: [],
-      colores: ['Naranja', 'Blanco', 'Negro'],
-      img: watchImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 56000, compara: 99900, costo: 0,
+      sku: '1498729', categoria: 'Tecnología', proveedor: 'Dtech', stock: 15,
+      tallas: [], colores: ['Naranja', 'Blanco', 'Negro'], img: mk('smartwatch'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- ZAPATERO 6 NIVELES ---------- */
+    /* ---------- ZAPATERO ---------- */
     {
       id: 'zapatero-6-niveles-2195373',
       nombre: 'Zapatero 6 Niveles Doble 10 Secciones',
@@ -350,17 +351,17 @@ Mantén tu calzado organizado y protegido con este Zapatero Organizador de 2 Col
 
 CARACTERÍSTICAS
 - Diseño de 2 columnas y 6 niveles
-- Puertas plegables de fácil apertura
-- Protege el calzado del polvo
-- Gran capacidad de almacenamiento
-- Estructura resistente y estable
+- Puertas plegables
+- Protege del polvo
+- Estructura resistente
 - Separadores en tela microperforada
+- Puertas plásticas blandas HDPE
 
-ESPECIFICACIONES TÉCNICAS
+ESPECIFICACIONES
 - Tipo: Zapatero organizador
-- Diseño: 2 columnas
 - Niveles: 6
 - Material: Plástico resistente
+- Uso: Interior
 - Requiere ensamblaje: Sí
 
 --------------------------------------------------
@@ -369,34 +370,27 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 60000,
-      compara: 109900,
-      costo: 0,
-      sku: '2195373',
-      categoria: 'Hogar',
-      stock: 12,
-      tallas: [],
-      colores: [],
-      img: zapateroImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 60000, compara: 109900, costo: 0,
+      sku: '2195373', categoria: 'Hogar', proveedor: 'Dtech', stock: 12,
+      tallas: [], colores: [], img: mk('zapatero'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- SECADOR REDDEN PROLUXE ---------- */
+    /* ---------- SECADOR ---------- */
     {
       id: 'secador-redden-proluxe-2140718',
       nombre: 'Secador Redden Proluxe 5000W',
       desc: `SECADOR REDDEN PROLUXE 5000W — ID: 2140718
 
-El secador REDDEN Proluxe es una herramienta diseñada para lograr un secado rápido y eficiente con resultados tipo salón desde casa.
+Secador profesional de alto rendimiento para resultados tipo salón desde casa.
 
 CARACTERÍSTICAS
-- Potencia aproximada: 5000W
+- Potencia: 5000W
 - Incluye difusor
-- Incluye boquillas concentradoras
+- Boquillas concentradoras
 - Control de temperatura
 - Función aire frío
+- Calor uniforme
 - Diseño ergonómico
 - Uso doméstico y semiprofesional
 
@@ -406,27 +400,19 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 70000,
-      compara: 129900,
-      costo: 0,
-      sku: '2140718',
-      categoria: 'Hogar',
-      stock: 15,
-      tallas: [],
-      colores: [],
-      img: secadorImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 70000, compara: 129900, costo: 0,
+      sku: '2140718', categoria: 'Hogar', proveedor: 'Dtech', stock: 15,
+      tallas: [], colores: [], img: mk('secador'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- INTERCOMUNICADOR Q58 ---------- */
+    /* ---------- INTERCOMUNICADOR ---------- */
     {
       id: 'intercomunicador-q58-2216196',
       nombre: 'Intercomunicador Q58',
       desc: `INTERCOMUNICADOR Q58 — ID: 2216196
 
-El intercomunicador para casco Q58 Max ofrece comunicación inalámbrica, reproducción de música y gestión de llamadas durante recorridos en motocicleta.
+Comunicación inalámbrica, música y gestión de llamadas para cascos de motocicleta.
 
 CARACTERÍSTICAS
 - Comunicación inalámbrica entre cascos
@@ -442,43 +428,33 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 80000,
-      compara: 139900,
-      costo: 0,
-      sku: '2216196',
-      categoria: 'Tecnología',
-      stock: 10,
-      tallas: [],
-      colores: [],
-      img: intercomunicadorImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 80000, compara: 139900, costo: 0,
+      sku: '2216196', categoria: 'Tecnología', proveedor: 'Dtech', stock: 10,
+      tallas: [], colores: [], img: mk('intercomunicador'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- PARLANTE JBL BOOMBOX 3 ---------- */
+    /* ---------- PARLANTE JBL ---------- */
     {
       id: 'parlante-jbl-boombox-3-1583443',
       nombre: 'Parlante Jbl Boombox 3',
       desc: `PARLANTE JBL BOOMBOX 3 — ID: 1583443
 
-El JBL Boombox 3 AAA ofrece un sonido natural, con una gran claridad y precisión. (Réplica)
+Sonido natural, claro y preciso con dispersión uniforme. (Réplica)
 
 CARACTERÍSTICAS
-- Sonido natural, claro y preciso
-- Dispersión uniforme del sonido
+- Sonido natural y preciso
+- Dispersión uniforme
 - Subwoofer integrado
 - Tweeter integrado
 - Alto rendimiento a volumen elevado
-- Diseño versátil y funcional
+- Diseño versátil
 
 ESPECIFICACIONES
 - Medidas: 34 x 20 x 10 cm
 
-VARIANTES DISPONIBLES
-- Camuflado
-- Negro
-- Azul
+VARIANTES
+- Camuflado · Negro · Azul
 - Rojo (Agotado)
 
 --------------------------------------------------
@@ -487,12 +463,8 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 100000,
-      compara: 189900,
-      costo: 0,
-      sku: '1583443',
-      categoria: 'Audio',
-      stock: 10,
+      precio: 100000, compara: 189900, costo: 0,
+      sku: '1583443', categoria: 'Audio', proveedor: 'Dtech', stock: 10,
       tallas: [],
       colores: [
         { nombre: 'Camuflado', agotado: false },
@@ -500,28 +472,26 @@ GARANTÍAS
         { nombre: 'Azul',      agotado: false },
         { nombre: 'Rojo',      agotado: true }
       ],
-      img: parlanteImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      img: mk('parlante'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- RADIO WALKIE TALKIE BAOFENG ---------- */
+    /* ---------- BAOFENG WALKIE TALKIE ---------- */
     {
       id: 'radio-walkietalkie-baofeng-2249709',
       nombre: 'Radio Walkietalkie Baofeng 2 Radios',
       desc: `RADIO WALKIE TALKIE BAOFENG BF-888S — ID: 2249709
 
-El Baofeng BF-888S es un radiotransmisor portátil de mano con comunicación clara, estable y de largo alcance. Este kit incluye 2 radios completamente equipados.
+Radiotransmisor portátil de mano con comunicación clara, estable y de largo alcance. Kit con 2 radios completos.
 
-DISEÑO Y CONSTRUCCIÓN
-- Formato: Radiotransmisor portátil de mano
-- Estructura reforzada resistente
-- Antena extraíble tipo flexible
+DISEÑO
+- Formato: Portátil de mano
+- Estructura reforzada
+- Antena extraíble flexible
 - Clip de cinturón incluido
 - Color: Negro
 
-CONECTIVIDAD Y FRECUENCIA
+CONECTIVIDAD
 - Rango: 400 - 470 MHz (UHF)
 - Canales: 16 programables
 - Subtonos: 50 CTCSS y 105 DCS
@@ -529,7 +499,7 @@ CONECTIVIDAD Y FRECUENCIA
 - Alcance: 2 a 5 km en campo abierto
 
 ALIMENTACIÓN
-- Batería recargable de iones de litio
+- Batería recargable Li-ion
 - Base de carga doble incluida
 - Autonomía: 8 - 12 horas
 
@@ -545,49 +515,37 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 75000,
-      compara: 149900,
-      costo: 0,
-      sku: '2249709',
-      categoria: 'Tecnología',
-      stock: 12,
-      tallas: [],
-      colores: ['Negro'],
-      img: baofengImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 75000, compara: 149900, costo: 0,
+      sku: '2249709', categoria: 'Tecnología', proveedor: 'Dtech', stock: 12,
+      tallas: [], colores: ['Negro'], img: mk('baofeng'),
+      badge: 'Más vendido', destacado: false, activo: true
     },
 
-    /* ---------- KIT TALADRO 813 ---------- */
+    /* ---------- KIT TALADRO ---------- */
     {
       id: 'kit-taladro-813-mandril-2167630',
       nombre: 'Kit Taladro 813 Mandril Metalico De 12',
       desc: `KIT TALADRO 813 MANDRIl METÁLICO — ID: 2167630
 
-Ten siempre la herramienta adecuada para cualquier reparación, instalación o proyecto con este completo Kit de Herramientas Inalámbricas 48V.
+Kit de herramientas inalámbricas 48V con taladro percutor y maletín organizador.
 
-TALADRO INALÁMBRICO
-- Taladro inalámbrico percutor
-- Mandril metálico de alta resistencia
-- Capacidad de 1/2 pulgada (13 mm)
-- 2 baterías recargables incluidas (48V)
+TALADRO
+- Inalámbrico percutor
+- Mandril metálico de 1/2" (13mm)
+- 2 baterías recargables 48V
 - Cargador incluido
-- Diseño ergonómico y práctico
+- Diseño ergonómico
 
-CONTENIDO DEL KIT
-- 1 Taladro inalámbrico percutor
-- 2 Baterías recargables de 48V
-- 1 Cargador de baterías
+CONTENIDO
+- 1 Taladro percutor
+- 2 Baterías 48V + Cargador
 - 1 Martillo
-- 1 Alicate de punta
-- 1 Alicate universal
+- 1 Alicate de punta + 1 universal
 - 1 Llave ajustable
 - 1 Cinta métrica
-- Juego de brocas
-- Puntas para atornillar
+- Brocas y puntas
 - Destornilladores de precisión
-- 1 Maletín organizador portátil
+- 1 Maletín organizador
 
 --------------------------------------------------
 GARANTÍAS
@@ -595,188 +553,133 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 175000,
-      compara: 329900,
-      costo: 0,
-      sku: '2167630',
-      categoria: 'Herramientas',
-      stock: 8,
-      tallas: [],
-      colores: [],
-      img: taladroImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 175000, compara: 329900, costo: 0,
+      sku: '2167630', categoria: 'Herramientas', proveedor: 'Dtech', stock: 8,
+      tallas: [], colores: [], img: mk('taladro'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* =========================================================
-       PERFUMES
-       ========================================================= */
+    /* ---------- PERFUMES ---------- */
 
-    /* ---------- AFNAN 9PM PREMIUM ---------- */
+    /* AFNAN 9PM */
     {
       id: 'afnan-9pm-premium-1607165',
       nombre: 'Afnan 9pm Premium',
       desc: `AFNAN 9PM PREMIUM — ID: 1607165
 
-Una fragancia masculina oriental que combina la frescura de las notas cítricas con la calidez de las maderas y especias. Diseñada para el hombre moderno que busca una estela intensa, elegante y duradera.
+Fragancia masculina oriental que combina frescura cítrica con calidez amaderada y especiada.
 
 PIRÁMIDE OLFATIVA
-- Notas de salida: Manzana, canela, lavanda, bergamota
-- Notas de corazón: Flor de azahar, lirio de los valles
-- Notas de fondo: Ámbar, vainilla, haba tonka
+- Salida: Manzana, canela, lavanda, bergamota
+- Corazón: Flor de azahar, lirio de los valles
+- Fondo: Ámbar, vainilla, haba tonka
 
 CARACTERÍSTICAS
-- Familia olfativa: Oriental amaderada
+- Familia: Oriental amaderada
 - Presentación: 100 ml
 - Concentración: Eau de Parfum
 - Género: Masculino
 - Duración: 8 a 12 horas
 - Estela: Intensa
 
-USO RECOMENDADO
-- Ideal para la noche, eventos especiales y salidas
-- Perfecto para climas fríos y templados
-- Aplica sobre piel limpia y puntos de pulso
-
 --------------------------------------------------
 GARANTÍAS
 - Producto incompleto · 10 días
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 85000,
-      compara: 169900,
-      costo: 0,
-      sku: '1607165',
-      categoria: 'Perfumes',
-      stock: 10,
-      tallas: [],
-      colores: [],
-      img: afnanImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 85000, compara: 169900, costo: 0,
+      sku: '1607165', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('afnan'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- LATTAFA KHAMRAH ---------- */
+    /* LATTAFA KHAMRAH */
     {
       id: 'lattafa-khamrah-1589189',
       nombre: 'Lattafa Khamrah Caja',
       desc: `LATTAFA KHAMRAH CAJA — ID: 1589189
 
-Una fragancia unisex envolvente que evoca la calidez de oriente medio. Su combinación de especias dulces, notas gourmand y maderas crea una estela elegante, adictiva y perfecta para cualquier ocasión.
+Fragancia unisex envolvente con especias dulces, notas gourmand y maderas.
 
 PIRÁMIDE OLFATIVA
-- Notas de salida: Canela, nuez moscada, bergamota
-- Notas de corazón: Dátiles, praliné, naranja
-- Notas de fondo: Vainilla, haba tonka, benjuí, mirra, amberwood
+- Salida: Canela, nuez moscada, bergamota
+- Corazón: Dátiles, praliné, naranja
+- Fondo: Vainilla, haba tonka, benjuí, mirra, amberwood
 
 CARACTERÍSTICAS
-- Familia olfativa: Especiada gourmand
+- Familia: Especiada gourmand
 - Presentación: 100 ml (con caja)
 - Concentración: Eau de Parfum
 - Género: Unisex
 - Duración: 10 a 14 horas
 - Estela: Muy intensa
 
-USO RECOMENDADO
-- Ideal para la noche y climas fríos
-- Perfecto para eventos y ocasiones especiales
-- Aplica sobre puntos de pulso para mayor fijación
-
 --------------------------------------------------
 GARANTÍAS
 - Producto incompleto · 10 días
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 80000,
-      compara: 159900,
-      costo: 0,
-      sku: '1589189',
-      categoria: 'Perfumes',
-      stock: 10,
-      tallas: [],
-      colores: [],
-      img: khamrahImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 80000, compara: 159900, costo: 0,
+      sku: '1589189', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('khamrah'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- ASAD ELIXIR ---------- */
+    /* ASAD ELIXIR */
     {
       id: 'asad-elixir-2258500',
       nombre: 'Asad Elixir',
       desc: `LATTAFA ASAD ELIXIR — ID: 2258500
 
-Una versión intensificada del icónico Asad. Esta fragancia combina la potencia del tabaco y el café con la dulzura de la vainilla y un fondo amaderado, creando una firma masculina audaz y sofisticada.
+Versión intensificada del icónico Asad. Potencia del tabaco y café con dulzura de vainilla y fondo amaderado.
 
 PIRÁMIDE OLFATIVA
-- Notas de salida: Piña, pimienta negra, bergamota
-- Notas de corazón: Café, tabaco, incienso, iris
-- Notas de fondo: Vainilla, benjuí, ámbar, cedro, cuero, pachulí
+- Salida: Piña, pimienta negra, bergamota
+- Corazón: Café, tabaco, incienso, iris
+- Fondo: Vainilla, benjuí, ámbar, cedro, cuero, pachulí
 
 CARACTERÍSTICAS
-- Familia olfativa: Amaderada especiada
+- Familia: Amaderada especiada
 - Presentación: 100 ml
 - Concentración: Eau de Parfum
 - Género: Masculino
 - Duración: 10 a 14 horas
 - Estela: Potente y duradera
 
-USO RECOMENDADO
-- Ideal para la noche y eventos especiales
-- Perfecto para climas fríos
-- Aplica sobre puntos de pulso para mayor fijación
-
 --------------------------------------------------
 GARANTÍAS
 - Producto incompleto · 10 días
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 85000,
-      compara: 179900,
-      costo: 0,
-      sku: '2258500',
-      categoria: 'Perfumes',
-      stock: 10,
-      tallas: [],
-      colores: [],
-      img: asadImgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 85000, compara: 179900, costo: 0,
+      sku: '2258500', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('asad'),
+      badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* ---------- 212 VIP BLACK ---------- */
+    /* 212 VIP BLACK */
     {
       id: '212-vip-black-1551986',
       nombre: '212 Vip Black',
       desc: `212 VIP BLACK — ID: 1551986
 
-Una fragancia masculina moderna y elegante que combina la frescura aromática con notas oscuras y sensuales. Su carácter nocturno y sofisticado la convierten en una elección ideal para el hombre que busca destacar.
+Fragancia masculina moderna, nocturna y sofisticada.
 
 PIRÁMIDE OLFATIVA
-- Notas de salida: Absenta, lavanda, hinojo
-- Notas de corazón: Pimienta negra, cardamomo
-- Notas de fondo: Cuero, vainilla, almizcle, benjuí, ámbar
+- Salida: Absenta, lavanda, hinojo
+- Corazón: Pimienta negra, cardamomo
+- Fondo: Cuero, vainilla, almizcle, benjuí, ámbar
 
 CARACTERÍSTICAS
-- Familia olfativa: Aromática especiada
+- Familia: Aromática especiada
 - Presentación: 100 ml
 - Concentración: Eau de Parfum
-- Tipo: Réplica premium de alta fijación
 - Género: Masculino
 - Duración: 8 a 10 horas
 - Estela: Intensa
-
-USO RECOMENDADO
-- Ideal para la noche y salidas
-- Perfecto para climas templados y fríos
-- Aplica sobre puntos de pulso
 
 --------------------------------------------------
 GARANTÍAS
@@ -784,18 +687,200 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 70000,
-      compara: 149900,
-      costo: 0,
-      sku: '1551986',
-      categoria: 'Perfumes',
-      stock: 10,
-      tallas: [],
-      colores: [],
-      img: vip212Imgs,
-      badge: 'Nuevo',
-      destacado: false,
-      activo: true
+      precio: 70000, compara: 149900, costo: 0,
+      sku: '1551986', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('vip212'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* =========================================================
+       NUEVOS — PROVEEDOR EMDEL
+       ========================================================= */
+
+    /* CANDADO BIOMÉTRICO */
+    {
+      id: 'candado-biometrico-digital-2113673',
+      nombre: 'Candado Biometrico Digital',
+      desc: `CANDADO BIOMÉTRICO DIGITAL — ID: 2113673
+
+Candado inteligente con apertura por huella digital. Seguridad y practicidad en un diseño elegante y resistente.
+
+DESCRIPCIÓN
+El candado biométrico inteligente de impresión digital es la elección perfecta para quienes buscan seguridad y practicidad. Fabricado en acero inoxidable de alta calidad, garantiza durabilidad y resistencia en cualquier ambiente interior.
+
+Olvídate de las llaves tradicionales que podrían perderse o ser robadas. Con este candado tendrás acceso rápido y seguro a tus pertenencias usando solo tu huella digital.
+
+CARACTERÍSTICAS
+- Apertura por huella digital (biométrica)
+- Alarma integrada antirrobo: si alguien intenta forzar la apertura, la alarma se activa
+- Estructura en acero inoxidable de alta calidad
+- Diseño horizontal elegante
+- Color: Negro
+- Uso: Interior
+- Sin necesidad de llaves
+
+BENEFICIOS
+- Acceso rápido y seguro
+- Mayor durabilidad y resistencia
+- Capa adicional de seguridad con alarma
+- Ideal para armarios, lockers, maletas, casilleros, cajones
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 65000, compara: 129900, costo: 0,
+      sku: '2113673', categoria: 'Seguridad', proveedor: 'Emdel', stock: 15,
+      tallas: [], colores: [], img: mk('candado'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* ARO DE LUZ RGB */
+    {
+      id: 'aro-de-luz-rgb-33cm-273712',
+      nombre: 'Aro De Luz Rgb 33 Cm',
+      desc: `ARO DE LUZ RGB LED 33 CM — ID: 273712
+
+Kit de aro de luz profesional para fotografía, selfies, vlogs y streaming. Incluye trípode ajustable de 2.1 metros.
+
+DESCRIPCIÓN
+La luz de anillo de fotografía es ideal para tomar mejores selfies y vlogs personales. Los kits de luz de anillo de selfie agregan suficiente luz a tu rostro cuando grabas video, hacen que tus líneas faciales sean más estereoscópicas y más claras.
+
+Fabricado con materiales plásticos de alta transmisión de luz: ligero, temperatura de color constante y baja pérdida.
+
+Esta luz de anillo admite alimentación enchufable: puedes conectarla con un cargador de celular (se recomienda uno de carga rápida original, no incluido). Puede ayudarte a tomar bellas imágenes incluso en lugares donde la alimentación es inconveniente.
+
+CARACTERÍSTICAS
+- Aro de luz de 33 cm de diámetro
+- Color: Negro
+- Iluminación RGB con múltiples colores
+- Soporte para celular incluido
+- Trípode de 2.1 m de altura ajustable
+- Material: Plástico
+- Medidas: 33 cm x 210 cm x 4 cm
+
+CONTENIDO
+- 1 Aro de luz RGB de 33 cm
+- 1 Soporte para celular
+- 1 Trípode de 2.1 m ajustable
+
+IDEAL PARA
+- Selfies y fotografías
+- Grabación de videos y vlogs
+- Streaming en vivo
+- Maquillaje profesional
+- Contenido para redes sociales
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 90000, compara: 179900, costo: 0,
+      sku: '273712', categoria: 'Tecnología', proveedor: 'Emdel', stock: 12,
+      tallas: [], colores: ['Negro'], img: mk('aro'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* GAFAS VR BOX */
+    {
+      id: 'gafas-vr-box-120378',
+      nombre: 'Gafas Vr Box Realidad Virtual',
+      desc: `GAFAS VR BOX — REALIDAD VIRTUAL — ID: 120378
+
+Vive la experiencia de realidad virtual con estas gafas de diseño ergonómico y cómodo.
+
+¡Experimenta lo nuevo en imagen! Descubre un nuevo nivel de calidad y detalle gracias a estas increíbles gafas. Videos, películas y juegos se ven increíbles. Además, con su banda ajustable no tendrás inconvenientes con la comodidad.
+
+CARACTERÍSTICAS DEL PRODUCTO
+- Material: Polímero ABS
+- Banda ajustable para mayor comodidad
+- Soportes espumados para mayor confort
+- Compatible con iOS y Android
+- Rango de operación: 10 metros
+- Conexión: Bluetooth
+- Batería: 2 AA
+
+IDEAL PARA
+- Ver películas en formato inmersivo
+- Jugar videojuegos compatibles con realidad virtual
+- Ver videos 360°
+- Experiencias educativas interactivas
+- Realidad virtual casera
+
+CONTENIDO
+- 1 Par de gafas VR Box
+- Banda ajustable
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 55000, compara: 109900, costo: 0,
+      sku: '120378', categoria: 'Tecnología', proveedor: 'Emdel', stock: 15,
+      tallas: [], colores: [], img: mk('gafasvr'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* BOMBILLO PARLANTE */
+    {
+      id: 'bombillo-parlante-bluetooth-362355',
+      nombre: 'Bombillo Parlante Con Bluetooth',
+      desc: `BOMBILLO PARLANTE CON BLUETOOTH — ID: 362355
+
+Bombillo LED con parlante Bluetooth integrado. Ilumina y reproduce música al mismo tiempo con control remoto.
+
+DESCRIPCIÓN
+Bombillo LED parlante Bluetooth. Con este dispositivo puedes escuchar música, apagar o encender la luz con el control remoto y cambiar los diversos colores de luz.
+
+CARACTERÍSTICAS
+- Control vía Bluetooth
+- Apariencia de lámpara LED
+- Conexión inalámbrica Bluetooth
+- Base E27 (tipo tornillo)
+- Volumen ajustable
+- Luz y música al mismo tiempo
+- Luz brillante comparable a bombilla halógena de 50W
+- Control remoto para cambiar colores y encender/apagar
+
+ESPECIFICACIONES
+- Color de la cáscara: Blanco
+- Interfaz: E27
+- Voltaje: AC100V ~ 240V / 50-60Hz
+- Potencia: 12W
+- Potencia LED: 6W
+- Potencia del altavoz: 3W
+- Respuesta de frecuencia: 135 Hz a 15 KHz
+- Versión Bluetooth: 3.0
+- Configuración: A2DP
+- Rango: 10 m (33 ft)
+- Color de luz: RGB 16 colores (control remoto)
+- Amplificador: Clase D
+- Distancia de transmisión BT: 5-10 metros
+- Sin contraseña de conexión
+- Temperatura de trabajo: -40 ~ 80 °C
+
+IDEAL PARA
+- Fiestas y reuniones
+- Ambiente y decoración
+- Uso en hogar, terraza, bar
+- Regalo original
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 50000, compara: 99900, costo: 0,
+      sku: '362355', categoria: 'Hogar', proveedor: 'Emdel', stock: 20,
+      tallas: [], colores: [], img: mk('bombillo'),
+      badge: 'Nuevo', destacado: false, activo: true
     }
   ];
 }
@@ -853,9 +938,7 @@ async function applyBrand(){
       }
     }
 
-    if (faviconUrl){
-      applyFavicon(faviconUrl);
-    }
+    if (faviconUrl) applyFavicon(faviconUrl);
   } catch(e){ console.warn('applyBrand error', e); }
 }
 
@@ -863,8 +946,8 @@ function applyFavicon(url){
   if (!url) return;
   const ext = url.split('.').pop().toLowerCase();
   const typeMap = {
-    png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg',
-    svg: 'image/svg+xml', ico: 'image/x-icon', webp: 'image/webp'
+    png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg',
+    svg:'image/svg+xml', ico:'image/x-icon', webp:'image/webp'
   };
   const type = typeMap[ext] || 'image/png';
 
@@ -895,7 +978,7 @@ function applyFavicon(url){
   shortcut.href = url;
 }
 
-/* ---------- NAV DINÁMICO ---------- */
+/* ---------- NAV ---------- */
 const NAV_ICONS = {
   home:    '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
   laptop:  '<rect x="2" y="3" width="20" height="14" rx="2"/><line x1="2" y1="20" x2="22" y2="20"/>',
@@ -907,7 +990,8 @@ const NAV_ICONS = {
   tag:     '<path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
   star:    '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
   tool:    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
-  spray:   '<path d="M9 2h6v4H9z"/><path d="M9 6v14a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><line x1="17" y1="8" x2="21" y2="8"/><line x1="17" y1="12" x2="19" y2="12"/><line x1="17" y1="16" x2="21" y2="16"/>'
+  spray:   '<path d="M9 2h6v4H9z"/><path d="M9 6v14a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><line x1="17" y1="8" x2="21" y2="8"/><line x1="17" y1="12" x2="19" y2="12"/><line x1="17" y1="16" x2="21" y2="16"/>',
+  shield:  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>'
 };
 
 function iconForCategory(cat){
@@ -921,6 +1005,7 @@ function iconForCategory(cat){
   if (c.includes('hogar'))                              return 'box';
   if (c.includes('herramient'))                         return 'tool';
   if (c.includes('perfum') || c.includes('fraganc'))    return 'spray';
+  if (c.includes('seguridad'))                          return 'shield';
   if (c.includes('oferta'))                             return 'tag';
   return 'star';
 }
@@ -1023,17 +1108,15 @@ function badgeColor(label){
   return 'purple';
 }
 
-/* ---------- PRODUCTO DETALLE ---------- */
+/* ---------- DETALLE ---------- */
 function openProduct(id){
   const p = state.products.find(x => x.id === id);
   if (!p) return;
   state.currentProduct = p;
   state.selTalla = (p.tallas && p.tallas[0]) || '';
-
   const colors = parseColors(p.colores);
   const firstAvailable = colors.find(c => !c.agotado);
   state.selColor = firstAvailable ? firstAvailable.nombre : '';
-
   state.selQty = 1;
   renderDetail();
   openOverlay('productModal');
@@ -1208,9 +1291,7 @@ function updateQty(){
   $('subtotalPrev').textContent = money(state.currentProduct.precio * state.selQty);
 }
 
-/* =========================================================
-   LIGHTBOX
-   ========================================================= */
+/* ---------- LIGHTBOX ---------- */
 function openLightbox(images, startIndex = 0){
   state.lbImages = images;
   state.lbIndex = Math.max(0, Math.min(startIndex, images.length - 1));
@@ -1269,7 +1350,8 @@ function addToCart(p, talla, color, qty){
   else state.cart.push({
     key, id: p.id, nombre: p.nombre, precio: Number(p.precio),
     img: firstImg,
-    talla: talla||'', color: color||'', sku: p.sku||'', qty
+    talla: talla||'', color: color||'', sku: p.sku||'',
+    proveedor: p.proveedor||'', qty
   });
   save(); renderCart(); toast('Producto agregado al carrito');
 }
@@ -1391,6 +1473,10 @@ function getPaymentLabel(recaudo){
   return recaudo === 'Con Recaudo' ? 'Pago contra entrega' : 'Pago anticipado';
 }
 
+/**
+ * Construye el mensaje de WhatsApp con el proveedor por cada producto,
+ * para que al crear el pedido en Dropi sepas a quién pedirlo.
+ */
 function buildOrderMessage(o){
   const L = [];
   L.push('NUEVO PEDIDO - ' + state.settings.nombre);
@@ -1412,6 +1498,7 @@ function buildOrderMessage(o){
   L.push('PRODUCTOS');
   o.items.forEach((it,i) => {
     L.push(`${i+1}. ${it.nombre}`);
+    if (it.proveedor) L.push('   Proveedor: ' + it.proveedor);
     const v = [it.talla,it.color].filter(Boolean).join(' / ');
     if (v) L.push('   Variante: ' + v);
     L.push(`   Cantidad: ${it.qty} x ${money(it.precio)} = ${money(it.qty * it.precio)}`);
@@ -1482,13 +1569,18 @@ function renderAdminProducts(){
     return;
   }
 
-  list.innerHTML = state.products.map(p => `
+  list.innerHTML = state.products.map(p => {
+    const prov = p.proveedor || '';
+    const provTag = prov
+      ? `<span class="prov-tag ${provClass(prov)}">${esc(prov)}</span>`
+      : '';
+    return `
     <div class="mini-item">
       <img src="${esc(getPrimaryImage(p))}" loading="lazy" decoding="async"
            onerror="this.onerror=null;this.src='${PH}'">
       <div class="mi-info">
         <h4>${esc(p.nombre)}</h4>
-        <small>${money(p.precio)} · Stock: ${p.stock} · ${esc(p.categoria||'General')}
+        <small>${money(p.precio)} · Stock: ${p.stock} · ${esc(p.categoria||'General')}${provTag}
         ${p.activo === false ? ' · <b style="color:#ef4444">OCULTO</b>' : ''}
         · ${(p.img||[]).length} img</small>
       </div>
@@ -1496,8 +1588,8 @@ function renderAdminProducts(){
         <button class="btn btn-ghost btn-sm" data-edit="${p.id}" type="button">Editar</button>
         <button class="btn btn-danger btn-sm" data-del="${p.id}" type="button">Borrar</button>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   list.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => editProduct(b.dataset.edit));
   list.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
@@ -1579,7 +1671,7 @@ function renderThumbs(){
 function clearForm(){
   state.editingId = null;
   state.tempImages = [];
-  ['pNombre','pCategoria','pPrecio','pCompara','pCosto','pSku','pDesc','pTallas','pColores','pImgUrl','pBadge','pFolder']
+  ['pNombre','pCategoria','pPrecio','pCompara','pCosto','pSku','pDesc','pTallas','pColores','pImgUrl','pBadge','pFolder','pProveedor']
     .forEach(id => $(id).value = '');
   $('pStock').value = 20;
   $('pFolderCount').value = 12;
@@ -1599,6 +1691,7 @@ function editProduct(id){
   $('pCompara').value  = p.compara || '';
   $('pCosto').value    = p.costo || '';
   $('pSku').value      = p.sku || '';
+  $('pProveedor').value = p.proveedor || '';
   $('pStock').value    = p.stock ?? 20;
   $('pDesc').value     = p.desc || '';
   $('pTallas').value   = (p.tallas||[]).join(', ');
@@ -1631,6 +1724,7 @@ async function saveProduct(){
   const data = {
     nombre,
     categoria: $('pCategoria').value.trim() || 'General',
+    proveedor: $('pProveedor').value.trim(),
     precio,
     compara: Number($('pCompara').value) || 0,
     costo:   Number($('pCosto').value)   || 0,
@@ -1814,7 +1908,6 @@ function bindEvents(){
     lbTouchX = null;
   }, {passive:true});
 
-  /* ADMIN — Sin contraseña, entra directo */
   $('adminBtn').onclick = () => {
     openOverlay('adminModal');
     showAdminBody();
@@ -1882,11 +1975,9 @@ function renderAll(){
 function init(){
   load();
   migrateProducts();
-
   applySettings();
   bindEvents();
   renderAll();
-
   applyBrand();
 }
 
