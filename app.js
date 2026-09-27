@@ -165,7 +165,6 @@ function provClass(prov){
 
 /**
  * Devuelve el HTML del aviso de precio variable.
- * variant: 'compact' (cards) | 'detail' | 'block' (carrito/checkout)
  */
 function priceNotice(variant = 'compact'){
   if (variant === 'block'){
@@ -244,12 +243,11 @@ function load(){
 }
 
 /**
- * MIGRACIÓN:
- * - Asigna proveedor a productos existentes
- * - Actualiza badge del walkie talkie a "Más vendido"
- * - Agrega los 4 productos nuevos de Emdel
+ * MIGRACIÓN v4: actualiza precios al nuevo margen de ganancia.
+ * Se ejecuta una sola vez por navegador.
  */
 function migrateProducts(){
+  /* --- Proveedores (v3) --- */
   const providerMap = {
     'airpods-pro-3-anc-2174138':     'Dtech',
     'smart-watch-ac10-serie-10':     'Dtech',
@@ -276,6 +274,7 @@ function migrateProducts(){
     wt.badge = 'Más vendido';
   }
 
+  /* --- Productos nuevos Emdel (v3) --- */
   if (!state.settings._migrated_jyp3){
     const demo = demoProducts();
     demo.forEach(d => {
@@ -284,6 +283,33 @@ function migrateProducts(){
       }
     });
     state.settings._migrated_jyp3 = true;
+  }
+
+  /* --- ACTUALIZACIÓN DE PRECIOS (v4) --- */
+  if (!state.settings._migrated_jyp4){
+    const priceUpdates = {
+      'airpods-pro-3-anc-2174138':      110000,
+      'smart-watch-ac10-serie-10':      65000,
+      'zapatero-6-niveles-2195373':     70000,
+      'secador-redden-proluxe-2140718': 80000,
+      'intercomunicador-q58-2216196':   95000,
+      'parlante-jbl-boombox-3-1583443': 130000,
+      'radio-walkietalkie-baofeng-2249709': 85000,
+      'kit-taladro-813-mandril-2167630': 195000,
+      'afnan-9pm-premium-1607165':      95000,
+      'lattafa-khamrah-1589189':        95000,
+      'asad-elixir-2258500':            95000,
+      '212-vip-black-1551986':          95000,
+      'candado-biometrico-digital-2113673': 75000
+    };
+
+    state.products.forEach(p => {
+      if (priceUpdates[p.id] !== undefined){
+        p.precio = priceUpdates[p.id];
+      }
+    });
+
+    state.settings._migrated_jyp4 = true;
   }
 
   save();
@@ -326,7 +352,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 70000, compara: 129900, costo: 0,
+      precio: 110000, compara: 159900, costo: 0,
       sku: '2174138', categoria: 'Tecnología', proveedor: 'Dtech', stock: 20,
       tallas: [], colores: ['Blanco'], img: mk('airpods'),
       badge: 'Más vendido', destacado: true, activo: true
@@ -370,7 +396,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 56000, compara: 99900, costo: 0,
+      precio: 65000, compara: 99900, costo: 0,
       sku: '1498729', categoria: 'Tecnología', proveedor: 'Dtech', stock: 15,
       tallas: [], colores: ['Naranja', 'Blanco', 'Negro'], img: mk('smartwatch'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -405,7 +431,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 60000, compara: 109900, costo: 0,
+      precio: 70000, compara: 109900, costo: 0,
       sku: '2195373', categoria: 'Hogar', proveedor: 'Dtech', stock: 12,
       tallas: [], colores: [], img: mk('zapatero'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -435,7 +461,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 70000, compara: 129900, costo: 0,
+      precio: 80000, compara: 129900, costo: 0,
       sku: '2140718', categoria: 'Hogar', proveedor: 'Dtech', stock: 15,
       tallas: [], colores: [], img: mk('secador'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -463,7 +489,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 80000, compara: 139900, costo: 0,
+      precio: 95000, compara: 139900, costo: 0,
       sku: '2216196', categoria: 'Tecnología', proveedor: 'Dtech', stock: 10,
       tallas: [], colores: [], img: mk('intercomunicador'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -498,7 +524,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 100000, compara: 189900, costo: 0,
+      precio: 130000, compara: 199900, costo: 0,
       sku: '1583443', categoria: 'Audio', proveedor: 'Dtech', stock: 10,
       tallas: [],
       colores: [
@@ -550,7 +576,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 75000, compara: 149900, costo: 0,
+      precio: 85000, compara: 149900, costo: 0,
       sku: '2249709', categoria: 'Tecnología', proveedor: 'Dtech', stock: 12,
       tallas: [], colores: ['Negro'], img: mk('baofeng'),
       badge: 'Más vendido', destacado: false, activo: true
@@ -588,7 +614,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 175000, compara: 329900, costo: 0,
+      precio: 195000, compara: 329900, costo: 0,
       sku: '2167630', categoria: 'Herramientas', proveedor: 'Dtech', stock: 8,
       tallas: [], colores: [], img: mk('taladro'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -621,7 +647,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 85000, compara: 169900, costo: 0,
+      precio: 95000, compara: 169900, costo: 0,
       sku: '1607165', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
       tallas: [], colores: [], img: mk('afnan'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -652,7 +678,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 80000, compara: 159900, costo: 0,
+      precio: 95000, compara: 169900, costo: 0,
       sku: '1589189', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
       tallas: [], colores: [], img: mk('khamrah'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -683,7 +709,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 85000, compara: 179900, costo: 0,
+      precio: 95000, compara: 189900, costo: 0,
       sku: '2258500', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
       tallas: [], colores: [], img: mk('asad'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -714,7 +740,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 70000, compara: 149900, costo: 0,
+      precio: 95000, compara: 179900, costo: 0,
       sku: '1551986', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
       tallas: [], colores: [], img: mk('vip212'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -739,7 +765,7 @@ Olvídate de las llaves tradicionales que podrían perderse o ser robadas. Con e
 
 CARACTERÍSTICAS
 - Apertura por huella digital (biométrica)
-- Alarma integrada antirrobo: si alguien intenta forzar la apertura, la alarma se activa
+- Alarma integrada antirrobo
 - Estructura en acero inoxidable de alta calidad
 - Diseño horizontal elegante
 - Color: Negro
@@ -758,7 +784,7 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 65000, compara: 129900, costo: 0,
+      precio: 75000, compara: 129900, costo: 0,
       sku: '2113673', categoria: 'Seguridad', proveedor: 'Emdel', stock: 15,
       tallas: [], colores: [], img: mk('candado'),
       badge: 'Nuevo', destacado: false, activo: true
@@ -777,8 +803,6 @@ La luz de anillo de fotografía es ideal para tomar mejores selfies y vlogs pers
 
 Fabricado con materiales plásticos de alta transmisión de luz: ligero, temperatura de color constante y baja pérdida.
 
-Esta luz de anillo admite alimentación enchufable: puedes conectarla con un cargador de celular (se recomienda uno de carga rápida original, no incluido). Puede ayudarte a tomar bellas imágenes incluso en lugares donde la alimentación es inconveniente.
-
 CARACTERÍSTICAS
 - Aro de luz de 33 cm de diámetro
 - Color: Negro
@@ -786,19 +810,11 @@ CARACTERÍSTICAS
 - Soporte para celular incluido
 - Trípode de 2.1 m de altura ajustable
 - Material: Plástico
-- Medidas: 33 cm x 210 cm x 4 cm
 
 CONTENIDO
 - 1 Aro de luz RGB de 33 cm
 - 1 Soporte para celular
 - 1 Trípode de 2.1 m ajustable
-
-IDEAL PARA
-- Selfies y fotografías
-- Grabación de videos y vlogs
-- Streaming en vivo
-- Maquillaje profesional
-- Contenido para redes sociales
 
 --------------------------------------------------
 GARANTÍAS
@@ -820,8 +836,6 @@ GARANTÍAS
 
 Vive la experiencia de realidad virtual con estas gafas de diseño ergonómico y cómodo.
 
-¡Experimenta lo nuevo en imagen! Descubre un nuevo nivel de calidad y detalle gracias a estas increíbles gafas. Videos, películas y juegos se ven increíbles. Además, con su banda ajustable no tendrás inconvenientes con la comodidad.
-
 CARACTERÍSTICAS DEL PRODUCTO
 - Material: Polímero ABS
 - Banda ajustable para mayor comodidad
@@ -830,13 +844,6 @@ CARACTERÍSTICAS DEL PRODUCTO
 - Rango de operación: 10 metros
 - Conexión: Bluetooth
 - Batería: 2 AA
-
-IDEAL PARA
-- Ver películas en formato inmersivo
-- Jugar videojuegos compatibles con realidad virtual
-- Ver videos 360°
-- Experiencias educativas interactivas
-- Realidad virtual casera
 
 --------------------------------------------------
 GARANTÍAS
@@ -858,17 +865,12 @@ GARANTÍAS
 
 Bombillo LED con parlante Bluetooth integrado. Ilumina y reproduce música al mismo tiempo con control remoto.
 
-DESCRIPCIÓN
-Bombillo LED parlante Bluetooth. Con este dispositivo puedes escuchar música, apagar o encender la luz con el control remoto y cambiar los diversos colores de luz.
-
 CARACTERÍSTICAS
 - Control vía Bluetooth
 - Apariencia de lámpara LED
-- Conexión inalámbrica Bluetooth
 - Base E27 (tipo tornillo)
 - Volumen ajustable
 - Luz y música al mismo tiempo
-- Luz brillante comparable a bombilla halógena de 50W
 - Control remoto para cambiar colores y encender/apagar
 
 ESPECIFICACIONES
@@ -878,21 +880,7 @@ ESPECIFICACIONES
 - Potencia: 12W
 - Potencia LED: 6W
 - Potencia del altavoz: 3W
-- Respuesta de frecuencia: 135 Hz a 15 KHz
-- Versión Bluetooth: 3.0
-- Configuración: A2DP
-- Rango: 10 m (33 ft)
-- Color de luz: RGB 16 colores (control remoto)
-- Amplificador: Clase D
-- Distancia de transmisión BT: 5-10 metros
-- Sin contraseña de conexión
-- Temperatura de trabajo: -40 ~ 80 °C
-
-IDEAL PARA
-- Fiestas y reuniones
-- Ambiente y decoración
-- Uso en hogar, terraza, bar
-- Regalo original
+- Color de luz: RGB 16 colores
 
 --------------------------------------------------
 GARANTÍAS
