@@ -157,16 +157,15 @@ function shadeColor(hex, percent){
 
 function provClass(prov){
   const p = (prov || '').toLowerCase().trim();
-  if (p === 'dtech') return 'dtech';
-  if (p === 'itm')   return 'itm';
-  if (p === 'emdel') return 'emdel';
-  if (p === 'zamia') return 'zamia';
+  if (p === 'dtech')    return 'dtech';
+  if (p === 'itm')      return 'itm';
+  if (p === 'emdel')    return 'emdel';
+  if (p === 'zamia')    return 'zamia';
+  if (p === 'tecnogar') return 'tecnogar';
   return '';
 }
 
-/**
- * Devuelve el HTML del aviso de precio variable.
- */
+/* ---------- AVISO DE PRECIO VARIABLE ---------- */
 function priceNotice(variant = 'compact'){
   if (variant === 'block'){
     return `<div class="cart-price-notice">
@@ -244,7 +243,10 @@ function load(){
 }
 
 /**
- * MIGRACIÓN v5: agrega los 4 productos de Zamia Naturaleza Latina.
+ * MIGRACIÓN v6:
+ *  - Revierte precios a valores anteriores
+ *  - Reordena productos (más vendidos primero)
+ *  - Agrega los nuevos productos D-Tech y Tecnogar
  */
 function migrateProducts(){
   /* --- Proveedores (v3) --- */
@@ -274,7 +276,7 @@ function migrateProducts(){
     wt.badge = 'Más vendido';
   }
 
-  /* --- Productos nuevos Emdel (v3) --- */
+  /* --- Productos Emdel (v3) --- */
   if (!state.settings._migrated_jyp3){
     const demo = demoProducts();
     demo.forEach(d => {
@@ -285,34 +287,12 @@ function migrateProducts(){
     state.settings._migrated_jyp3 = true;
   }
 
-  /* --- ACTUALIZACIÓN DE PRECIOS (v4) --- */
+  /* --- Precios v4 (mantenido por historial) --- */
   if (!state.settings._migrated_jyp4){
-    const priceUpdates = {
-      'airpods-pro-3-anc-2174138':      110000,
-      'smart-watch-ac10-serie-10':      65000,
-      'zapatero-6-niveles-2195373':     70000,
-      'secador-redden-proluxe-2140718': 80000,
-      'intercomunicador-q58-2216196':   95000,
-      'parlante-jbl-boombox-3-1583443': 130000,
-      'radio-walkietalkie-baofeng-2249709': 85000,
-      'kit-taladro-813-mandril-2167630': 195000,
-      'afnan-9pm-premium-1607165':      95000,
-      'lattafa-khamrah-1589189':        95000,
-      'asad-elixir-2258500':            95000,
-      '212-vip-black-1551986':          95000,
-      'candado-biometrico-digital-2113673': 75000
-    };
-
-    state.products.forEach(p => {
-      if (priceUpdates[p.id] !== undefined){
-        p.precio = priceUpdates[p.id];
-      }
-    });
-
     state.settings._migrated_jyp4 = true;
   }
 
-  /* --- PRODUCTOS ZAMIA NATURALEZA LATINA (v5) --- */
+  /* --- Productos Zamia (v5) --- */
   if (!state.settings._migrated_jyp5){
     const demo = demoProducts();
     const zamiaIds = [
@@ -329,6 +309,115 @@ function migrateProducts(){
     state.settings._migrated_jyp5 = true;
   }
 
+  /* =========================================================
+     v6 — REVERTIR PRECIOS + REORDENAR + AÑADIR NUEVOS
+     ========================================================= */
+  if (!state.settings._migrated_jyp6){
+
+    /* 1. Revertir a los precios anteriores */
+    const revertPrices = {
+      'airpods-pro-3-anc-2174138':      70000,
+      'smart-watch-ac10-serie-10':      56000,
+      'zapatero-6-niveles-2195373':     60000,
+      'secador-redden-proluxe-2140718': 70000,
+      'intercomunicador-q58-2216196':   80000,
+      'parlante-jbl-boombox-3-1583443': 100000,
+      'radio-walkietalkie-baofeng-2249709': 75000,
+      'kit-taladro-813-mandril-2167630': 175000,
+      'afnan-9pm-premium-1607165':      85000,
+      'lattafa-khamrah-1589189':        80000,
+      'asad-elixir-2258500':            85000,
+      '212-vip-black-1551986':          70000,
+      'candado-biometrico-digital-2113673': 65000
+    };
+
+    state.products.forEach(p => {
+      if (revertPrices[p.id] !== undefined){
+        p.precio = revertPrices[p.id];
+      }
+    });
+
+    /* 2. Agregar productos nuevos D-Tech y Tecnogar */
+    const demo = demoProducts();
+    const newIds = [
+      'hidrolavadora-portatil-hidr526658',
+      'maquina-profesional-9pz-2023790',
+      'fire-tv-stick-2084721',
+      'gramera-digital-vaso-1832220',
+      'control-xbox-360-1845082',
+      'bascula-kitchen-kca001-1829993',
+      'caja-condimentos-1882226',
+      'camara-espejo-retrovisor-1828689',
+      'irrigador-oral-2086630',
+      'cepillo-electrico-x3-2086593',
+      'inflador-globos-1505232',
+      'reloj-combo-x8-1635681',
+      'onn-hd-convertidor-1833253'
+    ];
+
+    demo.forEach(d => {
+      if (newIds.includes(d.id) && !state.products.find(p => p.id === d.id)){
+        state.products.push(d);
+      }
+    });
+
+    /* 3. Reordenar: más vendidos primero, luego por rotación */
+    const order = [
+      /* Más vendidos */
+      'airpods-pro-3-anc-2174138',
+      'radio-walkietalkie-baofeng-2249709',
+
+      /* Alta rotación */
+      'smart-watch-ac10-serie-10',
+      'fire-tv-stick-2084721',
+      'parlante-jbl-boombox-3-1583443',
+      'kit-taladro-813-mandril-2167630',
+      'hidrolavadora-portatil-hidr526658',
+      'intercomunicador-q58-2216196',
+      'onn-hd-convertidor-1833253',
+      'secador-redden-proluxe-2140718',
+      'zapatero-6-niveles-2195373',
+      'reloj-combo-x8-1635681',
+      'camara-espejo-retrovisor-1828689',
+      'maquina-profesional-9pz-2023790',
+      'caja-condimentos-1882226',
+      'gramera-digital-vaso-1832220',
+      'control-xbox-360-1845082',
+      'inflador-globos-1505232',
+      'irrigador-oral-2086630',
+      'cepillo-electrico-x3-2086593',
+      'bascula-kitchen-kca001-1829993',
+      'candado-biometrico-digital-2113673',
+      'aro-de-luz-rgb-33cm-273712',
+      'gafas-vr-box-120378',
+      'bombillo-parlante-bluetooth-362355',
+
+      /* Perfumes */
+      'afnan-9pm-premium-1607165',
+      'lattafa-khamrah-1589189',
+      'asad-elixir-2258500',
+      '212-vip-black-1551986',
+
+      /* Salud */
+      'zamia-magnesio-10en1-2051082',
+      'creatina-elite-300g-2066788',
+      'omega3-triple-strength-2029856',
+      'liposomal-vitamina-c-2029971'
+    ];
+
+    const sorted = [];
+    order.forEach(id => {
+      const p = state.products.find(x => x.id === id);
+      if (p) sorted.push(p);
+    });
+    state.products.forEach(p => {
+      if (!sorted.find(x => x.id === p.id)) sorted.push(p);
+    });
+    state.products = sorted;
+
+    state.settings._migrated_jyp6 = true;
+  }
+
   save();
 }
 
@@ -339,7 +428,9 @@ function demoProducts(){
   const mk = folder => Array.from({length:15}, (_,i) => `img/${folder}/${i+1}.jpg`);
 
   return [
-    /* ---------- AIRPODS ---------- */
+    /* =====================================================
+       1. MÁS VENDIDOS
+       ===================================================== */
     {
       id: 'airpods-pro-3-anc-2174138',
       nombre: 'Audifonos Airpods Pro 3 ANC',
@@ -369,192 +460,11 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 110000, compara: 159900, costo: 0,
+      precio: 70000, compara: 129900, costo: 0,
       sku: '2174138', categoria: 'Tecnología', proveedor: 'Dtech', stock: 20,
       tallas: [], colores: ['Blanco'], img: mk('airpods'),
       badge: 'Más vendido', destacado: true, activo: true
     },
-
-    /* ---------- SMART WATCH ---------- */
-    {
-      id: 'smart-watch-ac10-serie-10',
-      nombre: 'Smart Watch AC10 Serie 10',
-      desc: `SMART WATCH AC10 SERIE 10
-
-DISEÑO Y PANTALLA
-- Pantalla: TFT táctil de 1.44 pulgadas
-- Resolución: 240 x 240 píxeles
-- Correa: Silicona intercambiable
-
-CONECTIVIDAD
-- Tecnología inalámbrica: Bluetooth 4.0 o superior
-- Compatibilidad: Android 5.0 / iOS 9.0 y superiores
-- App: FitPro / HiWatch
-
-BATERÍA Y CARGA
-- Capacidad: 150 mAh
-- Autonomía: 2 a 5 días
-- Carga: Magnética (cable USB incluido)
-- Tiempo: 1.5 a 2 horas
-
-FUNCIONES
-- Notificaciones de llamadas y apps
-- Frecuencia cardíaca y SpO2
-- Registro del sueño
-- Modos deportivos
-- Control de música y cámara
-
-VARIANTES
-- Naranja · Blanco · Negro
-
---------------------------------------------------
-GARANTÍAS
-- Producto incompleto · 10 días
-- Mal funcionamiento · 10 días
-- Producto roto · 10 días
-- Producto diferente · 10 días`,
-      precio: 65000, compara: 99900, costo: 0,
-      sku: '1498729', categoria: 'Tecnología', proveedor: 'Dtech', stock: 15,
-      tallas: [], colores: ['Naranja', 'Blanco', 'Negro'], img: mk('smartwatch'),
-      badge: 'Nuevo', destacado: false, activo: true
-    },
-
-    /* ---------- ZAPATERO ---------- */
-    {
-      id: 'zapatero-6-niveles-2195373',
-      nombre: 'Zapatero 6 Niveles Doble 10 Secciones',
-      desc: `ZAPATERO 6 NIVELES DOBLE 10 SECCIONES — ID: 2195373
-
-Mantén tu calzado organizado y protegido con este Zapatero Organizador de 2 Columnas y 6 Niveles con Puertas Plegables.
-
-CARACTERÍSTICAS
-- Diseño de 2 columnas y 6 niveles
-- Puertas plegables
-- Protege del polvo
-- Estructura resistente
-- Separadores en tela microperforada
-- Puertas plásticas blandas HDPE
-
-ESPECIFICACIONES
-- Tipo: Zapatero organizador
-- Niveles: 6
-- Material: Plástico resistente
-- Uso: Interior
-- Requiere ensamblaje: Sí
-
---------------------------------------------------
-GARANTÍAS
-- Producto incompleto · 10 días
-- Mal funcionamiento · 10 días
-- Producto roto · 10 días
-- Producto diferente · 10 días`,
-      precio: 70000, compara: 109900, costo: 0,
-      sku: '2195373', categoria: 'Hogar', proveedor: 'Dtech', stock: 12,
-      tallas: [], colores: [], img: mk('zapatero'),
-      badge: 'Nuevo', destacado: false, activo: true
-    },
-
-    /* ---------- SECADOR ---------- */
-    {
-      id: 'secador-redden-proluxe-2140718',
-      nombre: 'Secador Redden Proluxe 5000W',
-      desc: `SECADOR REDDEN PROLUXE 5000W — ID: 2140718
-
-Secador profesional de alto rendimiento para resultados tipo salón desde casa.
-
-CARACTERÍSTICAS
-- Potencia: 5000W
-- Incluye difusor
-- Boquillas concentradoras
-- Control de temperatura
-- Función aire frío
-- Calor uniforme
-- Diseño ergonómico
-- Uso doméstico y semiprofesional
-
---------------------------------------------------
-GARANTÍAS
-- Producto incompleto · 10 días
-- Mal funcionamiento · 10 días
-- Producto roto · 10 días
-- Producto diferente · 10 días`,
-      precio: 80000, compara: 129900, costo: 0,
-      sku: '2140718', categoria: 'Hogar', proveedor: 'Dtech', stock: 15,
-      tallas: [], colores: [], img: mk('secador'),
-      badge: 'Nuevo', destacado: false, activo: true
-    },
-
-    /* ---------- INTERCOMUNICADOR ---------- */
-    {
-      id: 'intercomunicador-q58-2216196',
-      nombre: 'Intercomunicador Q58',
-      desc: `INTERCOMUNICADOR Q58 — ID: 2216196
-
-Comunicación inalámbrica, música y gestión de llamadas para cascos de motocicleta.
-
-CARACTERÍSTICAS
-- Comunicación inalámbrica entre cascos
-- Reproducción de música
-- Gestión de llamadas
-- Pantalla informativa
-- Reducción inteligente de ruido
-- Resistente al agua y al polvo
-
---------------------------------------------------
-GARANTÍAS
-- Producto incompleto · 10 días
-- Mal funcionamiento · 10 días
-- Producto roto · 10 días
-- Producto diferente · 10 días`,
-      precio: 95000, compara: 139900, costo: 0,
-      sku: '2216196', categoria: 'Tecnología', proveedor: 'Dtech', stock: 10,
-      tallas: [], colores: [], img: mk('intercomunicador'),
-      badge: 'Nuevo', destacado: false, activo: true
-    },
-
-    /* ---------- PARLANTE JBL ---------- */
-    {
-      id: 'parlante-jbl-boombox-3-1583443',
-      nombre: 'Parlante Jbl Boombox 3',
-      desc: `PARLANTE JBL BOOMBOX 3 — ID: 1583443
-
-Sonido natural, claro y preciso con dispersión uniforme. (Réplica)
-
-CARACTERÍSTICAS
-- Sonido natural y preciso
-- Dispersión uniforme
-- Subwoofer integrado
-- Tweeter integrado
-- Alto rendimiento a volumen elevado
-- Diseño versátil
-
-ESPECIFICACIONES
-- Medidas: 34 x 20 x 10 cm
-
-VARIANTES
-- Camuflado · Negro · Azul
-- Rojo (Agotado)
-
---------------------------------------------------
-GARANTÍAS
-- Producto incompleto · 10 días
-- Mal funcionamiento · 10 días
-- Producto roto · 10 días
-- Producto diferente · 10 días`,
-      precio: 130000, compara: 199900, costo: 0,
-      sku: '1583443', categoria: 'Audio', proveedor: 'Dtech', stock: 10,
-      tallas: [],
-      colores: [
-        { nombre: 'Camuflado', agotado: false },
-        { nombre: 'Negro',     agotado: false },
-        { nombre: 'Azul',      agotado: false },
-        { nombre: 'Rojo',      agotado: true }
-      ],
-      img: mk('parlante'),
-      badge: 'Nuevo', destacado: false, activo: true
-    },
-
-    /* ---------- BAOFENG WALKIE TALKIE ---------- */
     {
       id: 'radio-walkietalkie-baofeng-2249709',
       nombre: 'Radio Walkietalkie Baofeng 2 Radios',
@@ -593,13 +503,130 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 85000, compara: 149900, costo: 0,
+      precio: 75000, compara: 149900, costo: 0,
       sku: '2249709', categoria: 'Tecnología', proveedor: 'Dtech', stock: 12,
       tallas: [], colores: ['Negro'], img: mk('baofeng'),
       badge: 'Más vendido', destacado: false, activo: true
     },
 
-    /* ---------- KIT TALADRO ---------- */
+    /* =====================================================
+       ALTA ROTACIÓN
+       ===================================================== */
+    {
+      id: 'smart-watch-ac10-serie-10',
+      nombre: 'Smart Watch AC10 Serie 10',
+      desc: `SMART WATCH AC10 SERIE 10
+
+DISEÑO Y PANTALLA
+- Pantalla: TFT táctil de 1.44 pulgadas
+- Resolución: 240 x 240 píxeles
+- Correa: Silicona intercambiable
+
+CONECTIVIDAD
+- Tecnología inalámbrica: Bluetooth 4.0 o superior
+- Compatibilidad: Android 5.0 / iOS 9.0 y superiores
+- App: FitPro / HiWatch
+
+BATERÍA Y CARGA
+- Capacidad: 150 mAh
+- Autonomía: 2 a 5 días
+- Carga: Magnética (cable USB incluido)
+- Tiempo: 1.5 a 2 horas
+
+FUNCIONES
+- Notificaciones de llamadas y apps
+- Frecuencia cardíaca y SpO2
+- Registro del sueño
+- Modos deportivos
+- Control de música y cámara
+
+VARIANTES
+- Naranja · Blanco · Negro
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 56000, compara: 99900, costo: 0,
+      sku: '1498729', categoria: 'Tecnología', proveedor: 'Dtech', stock: 15,
+      tallas: [], colores: ['Naranja', 'Blanco', 'Negro'], img: mk('smartwatch'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'fire-tv-stick-2084721',
+      nombre: 'Fire Tv Stick Caja Naranaja',
+      desc: `FIRE TV STICK — ANDROID TV — ID: 2084721
+
+¡Convierte tu TV vieja en una Smart TV de última generación!
+
+Lleva el entretenimiento a otro nivel con este Android TV Stick. Conéctalo al puerto HDMI de tu televisor, configúralo al Wi-Fi y ¡listo! Accede a tus plataformas favoritas en segundos.
+
+CARACTERÍSTICAS
+- Rápido y fluido: Interfaz intuitiva basada en Android
+- Tus Apps favoritas: Compatible con Netflix, YouTube, Disney+, Prime Video y más
+- Google Play Store: Descarga aplicaciones y juegos directamente en tu tele
+- Diseño compacto: Se oculta detrás de tu televisor, ideal para mantener el orden
+- Conexión HDMI estándar
+- Wi-Fi integrado
+
+IDEAL PARA
+- TVs antiguas sin funciones inteligentes
+- Habitaciones, oficinas, casa de descanso
+- Regalo práctico y funcional
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 110000, compara: 199900, costo: 0,
+      sku: '2084721', categoria: 'Tecnología', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('firetv'),
+      badge: 'Más vendido', destacado: false, activo: true
+    },
+    {
+      id: 'parlante-jbl-boombox-3-1583443',
+      nombre: 'Parlante Jbl Boombox 3',
+      desc: `PARLANTE JBL BOOMBOX 3 — ID: 1583443
+
+Sonido natural, claro y preciso con dispersión uniforme. (Réplica)
+
+CARACTERÍSTICAS
+- Sonido natural y preciso
+- Dispersión uniforme
+- Subwoofer integrado
+- Tweeter integrado
+- Alto rendimiento a volumen elevado
+- Diseño versátil
+
+ESPECIFICACIONES
+- Medidas: 34 x 20 x 10 cm
+
+VARIANTES
+- Camuflado · Negro · Azul
+- Rojo (Agotado)
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 100000, compara: 189900, costo: 0,
+      sku: '1583443', categoria: 'Audio', proveedor: 'Dtech', stock: 10,
+      tallas: [],
+      colores: [
+        { nombre: 'Camuflado', agotado: false },
+        { nombre: 'Negro',     agotado: false },
+        { nombre: 'Azul',      agotado: false },
+        { nombre: 'Rojo',      agotado: true }
+      ],
+      img: mk('parlante'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
     {
       id: 'kit-taladro-813-mandril-2167630',
       nombre: 'Kit Taladro 813 Mandril Metalico De 12',
@@ -631,32 +658,38 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 195000, compara: 329900, costo: 0,
+      precio: 175000, compara: 329900, costo: 0,
       sku: '2167630', categoria: 'Herramientas', proveedor: 'Dtech', stock: 8,
       tallas: [], colores: [], img: mk('taladro'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* ---------- PERFUMES ---------- */
     {
-      id: 'afnan-9pm-premium-1607165',
-      nombre: 'Afnan 9pm Premium',
-      desc: `AFNAN 9PM PREMIUM — ID: 1607165
+      id: 'hidrolavadora-portatil-hidr526658',
+      nombre: 'Hidrolavadora Portatil Doble Bateria',
+      desc: `HIDROLAVADORA INALÁMBRICA PORTÁTIL — SKU: HIDR526658
 
-Fragancia masculina oriental que combina frescura cítrica con calidez amaderada y especiada.
-
-PIRÁMIDE OLFATIVA
-- Salida: Manzana, canela, lavanda, bergamota
-- Corazón: Flor de azahar, lirio de los valles
-- Fondo: Ámbar, vainilla, haba tonka
+Hidrolavadora Inalámbrica Portátil Recargable 48V con 2 Baterías. Diseñada para limpiezas profundas y cómodas sin cables.
 
 CARACTERÍSTICAS
-- Familia: Oriental amaderada
-- Presentación: 100 ml
-- Concentración: Eau de Parfum
-- Género: Masculino
-- Duración: 8 a 12 horas
-- Estela: Intensa
+- Voltaje: 48V
+- Manguera de agua incluida
+- Ruedas para facilitar su transporte
+- Apta para trabajar con agua hasta 60 °C
+- Dosificador de detergente incorporado
+- Diseño para distintos tipos de chorro (profundizar el lavado)
+- Accesorio incluido
+- 2 baterías recargables para mayor autonomía
+
+IDEAL PARA
+- Lavado de autos y motos
+- Limpieza de fachadas, terrazas y patios
+- Riego y limpieza general
+- Jardinería y mantenimiento
+
+EMBALAJE
+- Papel burbuja y cartón
+- Vinipel negro
+- Cinta azul
 
 --------------------------------------------------
 GARANTÍAS
@@ -664,30 +697,25 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 95000, compara: 169900, costo: 0,
-      sku: '1607165', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
-      tallas: [], colores: [], img: mk('afnan'),
+      precio: 75000, compara: 149900, costo: 0,
+      sku: 'HIDR526658', categoria: 'Herramientas', proveedor: 'Dtech', stock: 10,
+      tallas: [], colores: [], img: mk('hidrolavadora'),
       badge: 'Nuevo', destacado: false, activo: true
     },
     {
-      id: 'lattafa-khamrah-1589189',
-      nombre: 'Lattafa Khamrah Caja',
-      desc: `LATTAFA KHAMRAH CAJA — ID: 1589189
+      id: 'intercomunicador-q58-2216196',
+      nombre: 'Intercomunicador Q58',
+      desc: `INTERCOMUNICADOR Q58 — ID: 2216196
 
-Fragancia unisex envolvente con especias dulces, notas gourmand y maderas.
-
-PIRÁMIDE OLFATIVA
-- Salida: Canela, nuez moscada, bergamota
-- Corazón: Dátiles, praliné, naranja
-- Fondo: Vainilla, haba tonka, benjuí, mirra, amberwood
+Comunicación inalámbrica, música y gestión de llamadas para cascos de motocicleta.
 
 CARACTERÍSTICAS
-- Familia: Especiada gourmand
-- Presentación: 100 ml (con caja)
-- Concentración: Eau de Parfum
-- Género: Unisex
-- Duración: 10 a 14 horas
-- Estela: Muy intensa
+- Comunicación inalámbrica entre cascos
+- Reproducción de música
+- Gestión de llamadas
+- Pantalla informativa
+- Reducción inteligente de ruido
+- Resistente al agua y al polvo
 
 --------------------------------------------------
 GARANTÍAS
@@ -695,30 +723,32 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 95000, compara: 169900, costo: 0,
-      sku: '1589189', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
-      tallas: [], colores: [], img: mk('khamrah'),
+      precio: 80000, compara: 139900, costo: 0,
+      sku: '2216196', categoria: 'Tecnología', proveedor: 'Dtech', stock: 10,
+      tallas: [], colores: [], img: mk('intercomunicador'),
       badge: 'Nuevo', destacado: false, activo: true
     },
     {
-      id: 'asad-elixir-2258500',
-      nombre: 'Asad Elixir',
-      desc: `LATTAFA ASAD ELIXIR — ID: 2258500
+      id: 'onn-hd-convertidor-1833253',
+      nombre: 'Onn Hd Convertidor A Smart Tv Original',
+      desc: `ONN HD CONVERTIDOR A SMART TV — ID: 1833253
 
-Versión intensificada del icónico Asad. Potencia del tabaco y café con dulzura de vainilla y fondo amaderado.
+¡Convierte tu TV en un Smart TV al instante!
 
-PIRÁMIDE OLFATIVA
-- Salida: Piña, pimienta negra, bergamota
-- Corazón: Café, tabaco, incienso, iris
-- Fondo: Vainilla, benjuí, ámbar, cedro, cuero, pachulí
+¿Tienes un televisor antiguo y quieres disfrutar de Netflix, YouTube, Disney+ y más? Con el Convertidor Onn HD transforma cualquier pantalla con entrada HDMI en una verdadera Smart TV.
 
-CARACTERÍSTICAS
-- Familia: Amaderada especiada
-- Presentación: 100 ml
-- Concentración: Eau de Parfum
-- Género: Masculino
-- Duración: 10 a 14 horas
-- Estela: Potente y duradera
+CARACTERÍSTICAS PRINCIPALES
+- Conexión HDMI: Compatible con la mayoría de televisores y monitores
+- Sistema Android TV integrado
+- Wi-Fi integrado
+- Resolución HD
+- Control remoto incluido
+- Entrada USB y ranura para MicroSD
+
+IDEAL PARA
+- Televisores sin funciones inteligentes
+- Regalos prácticos y económicos
+- Oficinas, cuartos secundarios o casas de descanso
 
 --------------------------------------------------
 GARANTÍAS
@@ -726,30 +756,27 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 95000, compara: 189900, costo: 0,
-      sku: '2258500', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
-      tallas: [], colores: [], img: mk('asad'),
+      precio: 175000, compara: 289900, costo: 0,
+      sku: '1833253', categoria: 'Tecnología', proveedor: 'Tecnogar', stock: 8,
+      tallas: [], colores: [], img: mk('onn'),
       badge: 'Nuevo', destacado: false, activo: true
     },
     {
-      id: '212-vip-black-1551986',
-      nombre: '212 Vip Black',
-      desc: `212 VIP BLACK — ID: 1551986
+      id: 'secador-redden-proluxe-2140718',
+      nombre: 'Secador Redden Proluxe 5000W',
+      desc: `SECADOR REDDEN PROLUXE 5000W — ID: 2140718
 
-Fragancia masculina moderna, nocturna y sofisticada.
-
-PIRÁMIDE OLFATIVA
-- Salida: Absenta, lavanda, hinojo
-- Corazón: Pimienta negra, cardamomo
-- Fondo: Cuero, vainilla, almizcle, benjuí, ámbar
+Secador profesional de alto rendimiento para resultados tipo salón desde casa.
 
 CARACTERÍSTICAS
-- Familia: Aromática especiada
-- Presentación: 100 ml
-- Concentración: Eau de Parfum
-- Género: Masculino
-- Duración: 8 a 10 horas
-- Estela: Intensa
+- Potencia: 5000W
+- Incluye difusor
+- Boquillas concentradoras
+- Control de temperatura
+- Función aire frío
+- Calor uniforme
+- Diseño ergonómico
+- Uso doméstico y semiprofesional
 
 --------------------------------------------------
 GARANTÍAS
@@ -757,17 +784,385 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 95000, compara: 179900, costo: 0,
-      sku: '1551986', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
-      tallas: [], colores: [], img: mk('vip212'),
+      precio: 70000, compara: 129900, costo: 0,
+      sku: '2140718', categoria: 'Hogar', proveedor: 'Dtech', stock: 15,
+      tallas: [], colores: [], img: mk('secador'),
       badge: 'Nuevo', destacado: false, activo: true
     },
+    {
+      id: 'zapatero-6-niveles-2195373',
+      nombre: 'Zapatero 6 Niveles Doble 10 Secciones',
+      desc: `ZAPATERO 6 NIVELES DOBLE 10 SECCIONES — ID: 2195373
 
-    /* =========================================================
-       EMDEL
-       ========================================================= */
+Mantén tu calzado organizado y protegido con este Zapatero Organizador de 2 Columnas y 6 Niveles con Puertas Plegables.
 
-    /* CANDADO BIOMÉTRICO */
+CARACTERÍSTICAS
+- Diseño de 2 columnas y 6 niveles
+- Puertas plegables
+- Protege del polvo
+- Estructura resistente
+- Separadores en tela microperforada
+- Puertas plásticas blandas HDPE
+
+ESPECIFICACIONES
+- Tipo: Zapatero organizador
+- Niveles: 6
+- Material: Plástico resistente
+- Uso: Interior
+- Requiere ensamblaje: Sí
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 60000, compara: 109900, costo: 0,
+      sku: '2195373', categoria: 'Hogar', proveedor: 'Dtech', stock: 12,
+      tallas: [], colores: [], img: mk('zapatero'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'reloj-combo-x8-1635681',
+      nombre: 'Reloj En Combo X8',
+      desc: `COMBO X8 — ID: 1635681
+
+Una solución completa para tus dispositivos. Ideal para cargar y usar varios dispositivos electrónicos de manera conveniente.
+
+INCLUYE
+- Batería externa portátil
+- Smartwatch con monitoreo de actividad, notificaciones y control de música
+- Audífonos inalámbricos Bluetooth
+- Base de carga inalámbrica
+- Cargador de pared
+
+CARACTERÍSTICAS DESTACADAS
+- Versatilidad: Carga varios dispositivos al mismo tiempo
+- Comodidad: Carga inalámbrica sin cables
+- Portabilidad: Batería externa y audífonos fáciles de transportar
+
+POSIBLES USOS
+- Viajes: Todos tus dispositivos esenciales en un solo paquete
+- Ejercicio: Música y monitoreo de actividad
+- Trabajo: Escritorio y reuniones
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 100000, compara: 189900, costo: 0,
+      sku: '1635681', categoria: 'Tecnología', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('combox8'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'camara-espejo-retrovisor-1828689',
+      nombre: 'Camara Espejo Retrovisor Zo',
+      desc: `CÁMARA ESPEJO RETROVISOR — ID: 1828689
+
+Seguridad y visión inteligente al conducir. Se integra de forma discreta y elegante en tu retrovisor.
+
+CARACTERÍSTICAS PRINCIPALES
+- Pantalla táctil integrada en el espejo
+- Cámara frontal y trasera en HD
+- Grabación continua con sensor de movimiento
+- Visión nocturna y gran angular
+- Fácil instalación y uso intuitivo
+- Diseño discreto que reemplaza tu retrovisor original
+
+BENEFICIOS
+- Mayor visibilidad y control al volante
+- Estacionamiento preciso
+- Registro de incidentes en la vía
+- Seguridad día y noche
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 86000, compara: 159900, costo: 0,
+      sku: '1828689', categoria: 'Tecnología', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('camaraespejo'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'maquina-profesional-9pz-2023790',
+      nombre: 'Maquina Profesional 9 Piezas',
+      desc: `MÁQUINA PROFESIONAL 9 PIEZAS — ID: 2023790
+
+Máquina cortadora de cabello profesional con alimentación por cable, diseñada para uso continuo en barberías y entornos de peluquería.
+
+CARACTERÍSTICAS
+- Alimentación por cable (uso continuo)
+- Orientada al corte, perfilado y rebaje de cabello
+- Trabajos prolongados con estabilidad de potencia constante
+- Diseño que prioriza durabilidad mecánica
+- Precisión de corte
+- Compatible con accesorios de ajuste de longitud
+- 9 piezas en total (incluye accesorios)
+
+IDEAL PARA
+- Barberías profesionales
+- Peluquerías
+- Uso doméstico avanzado
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 55000, compara: 119900, costo: 0,
+      sku: '2023790', categoria: 'Hogar', proveedor: 'Dtech', stock: 10,
+      tallas: [], colores: [], img: mk('maquina'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'caja-condimentos-1882226',
+      nombre: 'Caja Organizadora De Condimentos',
+      desc: `CAJA ORGANIZADORA DE CONDIMENTOS — ID: 1882226
+
+Práctico organizador giratorio con capacidad para 18 frascos de especias.
+
+CARACTERÍSTICAS
+- Capacidad para 18 frascos
+- Diseño moderno y compacto
+- Rotación suave de 360° para fácil acceso
+- Frascos transparentes con tapa
+- Ideal para cocinas pequeñas o espacios reducidos
+- Material resistente y duradero
+- Fácil de limpiar y mantener
+
+INFORMACIÓN RELEVANTE
+El color se envía según disponibilidad. Puedes dejar en nota el color que deseas y se enviará según existencias.
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 100000, compara: 189900, costo: 0,
+      sku: '1882226', categoria: 'Hogar', proveedor: 'Tecnogar', stock: 8,
+      tallas: [], colores: [], img: mk('condimentos'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'gramera-digital-vaso-1832220',
+      nombre: 'Gramera Digital Vaso Zo',
+      desc: `GRAMERA DIGITAL TIPO VASO — ID: 1832220
+
+¡Mide con precisión mientras mezclas! Combina báscula y vaso medidor en un solo producto.
+
+CARACTERÍSTICAS DESTACADAS
+- Pantalla digital LCD de fácil lectura
+- Medición precisa en gramos, mililitros, onzas y tazas
+- Función tara para restar el peso del recipiente
+- Funciona con pila (incluida)
+- Vaso desmontable y fácil de lavar
+- Diseño ergonómico y práctico
+
+IDEAL PARA
+- Cocina casera
+- Repostería y preparaciones exactas
+- Control de porciones
+- Mezclas con precisión
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 65000, compara: 129900, costo: 0,
+      sku: '1832220', categoria: 'Hogar', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('gramera'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'control-xbox-360-1845082',
+      nombre: 'Control Xbox 360 Alambrico Ma001',
+      desc: `CONTROL XBOX 360 ALÁMBRICO MA001 — ID: 1845082
+
+Control alámbrico para Xbox 360 con conexión USB de alta respuesta. Diseñado para ofrecer precisión en cada partida con cable de largo alcance y construcción ergonómica.
+
+CARACTERÍSTICAS
+- Conexión alámbrica USB
+- Compatible con Xbox 360 y PC (Windows)
+- Diseño ergonómico con agarre antideslizante
+- Joysticks analógicos de precisión
+- D-pad direccional de 8 vías
+- Botones de acción A, B, X, Y
+- Gatillos y bumpers LB / RB con respuesta táctil
+- Vibración dual (motores internos)
+- Cable de largo alcance
+- Plug and Play: sin configuración adicional
+
+IDEAL PARA
+- Juegos de Xbox 360
+- Juegos de PC compatibles con mando
+- Emuladores y juegos retro
+- Regalo para gamers
+
+BENEFICIOS
+- Cero latencia gracias a la conexión por cable
+- Sin necesidad de baterías ni carga
+- Mayor durabilidad que los controles inalámbricos
+- Excelente relación calidad-precio
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 77000, compara: 149900, costo: 0,
+      sku: '1845082', categoria: 'Tecnología', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('xbox'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'inflador-globos-1505232',
+      nombre: 'Inflador De Globos Electrico',
+      desc: `INFLADOR DE GLOBOS ELÉCTRICO — ID: 1505232
+
+Bomba para inflar globos eléctrica con boquilla de orificio doble, compresor de aire y soplador.
+
+DESCRIPCIÓN
+Cuando celebramos festivales y eventos siempre organizamos globos. Cuando el número es grande, inflar por la boca es una pérdida de tiempo. Es hora de tener un inflador de globos eléctrico.
+
+CARACTERÍSTICAS
+- Diseñado para inflar un gran número de globos de forma rápida y fácil
+- Asa para fácil movimiento y transporte
+- 2 tubos de extensión de boca inflable para globos pequeños
+- Bajo nivel de ruido
+- Botón de encendido/apagado para uso continuo
+- Boquillas dobles: se activa al presionar, se detiene al liberar
+- Adecuado para globos publicitarios, decoración y eventos
+
+ESPECIFICACIONES
+- Voltaje: 110 V
+- Potencia: 600W
+- 2 Modos de operación: directo y manual
+- Medidas: 18 cm largo x 12 cm ancho x 16 cm alto
+- Recomendación: No exceder 2 horas continuas de operación
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 65000, compara: 129900, costo: 0,
+      sku: '1505232', categoria: 'Hogar', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('inflador'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'irrigador-oral-2086630',
+      nombre: 'Irrigador Oral Electrico Recargable',
+      desc: `IRRIGADOR BUCAL PORTÁTIL PPS — ID: 2086630
+
+Lleva la limpieza de tu boca a otro nivel. Elimina la placa y los residuos de comida donde el cepillo tradicional no llega. Recomendado para personas con brackets, implantes, puentes o encías sensibles.
+
+POTENCIA Y PERSONALIZACIÓN
+Cuenta con 3 modos de uso ajustables:
+- Weak (Suave): Ideal para encías sensibles o primer uso
+- Strong (Fuerte): Limpieza profunda y eliminación de residuos difíciles
+- Pulse (Pulso): Masajea las encías y mejora la circulación
+
+CARACTERÍSTICAS PRINCIPALES
+- Limpieza de precisión: Chorro de agua a presión elimina hasta el 99% de la placa bacteriana
+- Diseño impermeable: Certificación "Whole Waterproof"
+- Portátil y recargable: Diseño ergonómico sin cables
+- Tanque transparente: Fácil de ver el nivel y rellenar
+- Ideal para viajes o uso en casa
+
+CONTENIDO
+- 1 Irrigador Bucal PPS (color verde menta pastel)
+- Kit de boquillas multifuncionales: estándar, limpiador de lengua y tipo cepillo
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 54000, compara: 109900, costo: 0,
+      sku: '2086630', categoria: 'Salud', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: ['Verde menta'], img: mk('irrigador'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'cepillo-electrico-x3-2086593',
+      nombre: 'Cepillo Dientes Electrico Cabezales X3',
+      desc: `CEPILLO DENTAL ELECTRÓNICO X-3 — ID: 2086593
+
+Lleva tu higiene oral al siguiente nivel. Diseñado para ofrecer una limpieza mucho más efectiva que un cepillo manual, eliminando más placa y cuidando tus encías con tecnología sónica.
+
+CARACTERÍSTICAS PRINCIPALES
+- 6 Modos de limpieza: blanqueamiento, limpieza estándar, cuidado de encías sensibles, pulido, y más
+- Temporizador inteligente: Cumple con el tiempo recomendado por odontólogos
+- Carga USB: Práctico y ecológico
+- Resistente al agua: Diseño seguro para usar en el baño
+
+CONTENIDO
+- 1 Mango de cepillo sónico (colores: Blanco, Negro, Rosa)
+- 4 Cabezales en total: 1 instalado + 3 de repuesto
+- Cable de carga USB
+
+BENEFICIOS
+- Cerdas de alta densidad: Suaves con el esmalte, firmes con manchas y placa
+- Diseño ergonómico: Ligero y fácil de manejar
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 50000, compara: 99900, costo: 0,
+      sku: '2086593', categoria: 'Salud', proveedor: 'Tecnogar', stock: 12,
+      tallas: [], colores: ['Blanco', 'Negro', 'Rosa'], img: mk('cepillo'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'bascula-kitchen-kca001-1829993',
+      nombre: 'Bascula Cocina Kitchen Kca001 Zo',
+      desc: `BÁSCULA DE COCINA DIGITAL KITCHEN KCA-001 — ID: 1829993
+
+Haz tus recetas con total exactitud gracias a esta práctica báscula digital. Ideal para pesar ingredientes sólidos y líquidos con precisión.
+
+ESPECIFICACIONES
+- Capacidad máxima: 10 kg
+- Precisión: 1 gramo
+- Pantalla digital LCD fácil de leer
+- Funciones: Tara, cambio de unidades (g, oz, lb, ml)
+- Alimentación: 2 pilas AA
+- Material: Superficie en plástico resistente
+- Diseño compacto: Fácil de guardar y limpiar
+
+PERFECTA PARA
+- Chefs y reposteros
+- Cocina casera
+- Control de porciones
+- Repostería de precisión
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 48000, compara: 99900, costo: 0,
+      sku: '1829993', categoria: 'Hogar', proveedor: 'Tecnogar', stock: 10,
+      tallas: [], colores: [], img: mk('bascula'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
     {
       id: 'candado-biometrico-digital-2113673',
       nombre: 'Candado Biometrico Digital',
@@ -801,13 +1196,11 @@ GARANTÍAS
 - Mal funcionamiento · 10 días
 - Producto roto · 10 días
 - Producto diferente · 10 días`,
-      precio: 75000, compara: 129900, costo: 0,
+      precio: 65000, compara: 129900, costo: 0,
       sku: '2113673', categoria: 'Seguridad', proveedor: 'Emdel', stock: 15,
       tallas: [], colores: [], img: mk('candado'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* ARO DE LUZ RGB */
     {
       id: 'aro-de-luz-rgb-33cm-273712',
       nombre: 'Aro De Luz Rgb 33 Cm',
@@ -842,8 +1235,6 @@ GARANTÍAS
       tallas: [], colores: ['Negro'], img: mk('aro'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* GAFAS VR BOX */
     {
       id: 'gafas-vr-box-120378',
       nombre: 'Gafas Vr Box Realidad Virtual',
@@ -871,8 +1262,6 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('gafasvr'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* BOMBILLO PARLANTE */
     {
       id: 'bombillo-parlante-bluetooth-362355',
       nombre: 'Bombillo Parlante Con Bluetooth',
@@ -909,20 +1298,144 @@ GARANTÍAS
       badge: 'Nuevo', destacado: false, activo: true
     },
 
-    /* =========================================================
-       ZAMIA NATURALEZA LATINA — SUPLEMENTOS
-       ========================================================= */
+    /* =====================================================
+       PERFUMES
+       ===================================================== */
+    {
+      id: 'afnan-9pm-premium-1607165',
+      nombre: 'Afnan 9pm Premium',
+      desc: `AFNAN 9PM PREMIUM — ID: 1607165
 
-    /* ZAMIA MAGNESIO 10 EN 1 */
+Fragancia masculina oriental que combina frescura cítrica con calidez amaderada y especiada.
+
+PIRÁMIDE OLFATIVA
+- Salida: Manzana, canela, lavanda, bergamota
+- Corazón: Flor de azahar, lirio de los valles
+- Fondo: Ámbar, vainilla, haba tonka
+
+CARACTERÍSTICAS
+- Familia: Oriental amaderada
+- Presentación: 100 ml
+- Concentración: Eau de Parfum
+- Género: Masculino
+- Duración: 8 a 12 horas
+- Estela: Intensa
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 85000, compara: 169900, costo: 0,
+      sku: '1607165', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('afnan'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'lattafa-khamrah-1589189',
+      nombre: 'Lattafa Khamrah Caja',
+      desc: `LATTAFA KHAMRAH CAJA — ID: 1589189
+
+Fragancia unisex envolvente con especias dulces, notas gourmand y maderas.
+
+PIRÁMIDE OLFATIVA
+- Salida: Canela, nuez moscada, bergamota
+- Corazón: Dátiles, praliné, naranja
+- Fondo: Vainilla, haba tonka, benjuí, mirra, amberwood
+
+CARACTERÍSTICAS
+- Familia: Especiada gourmand
+- Presentación: 100 ml (con caja)
+- Concentración: Eau de Parfum
+- Género: Unisex
+- Duración: 10 a 14 horas
+- Estela: Muy intensa
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 80000, compara: 169900, costo: 0,
+      sku: '1589189', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('khamrah'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: 'asad-elixir-2258500',
+      nombre: 'Asad Elixir',
+      desc: `LATTAFA ASAD ELIXIR — ID: 2258500
+
+Versión intensificada del icónico Asad. Potencia del tabaco y café con dulzura de vainilla y fondo amaderado.
+
+PIRÁMIDE OLFATIVA
+- Salida: Piña, pimienta negra, bergamota
+- Corazón: Café, tabaco, incienso, iris
+- Fondo: Vainilla, benjuí, ámbar, cedro, cuero, pachulí
+
+CARACTERÍSTICAS
+- Familia: Amaderada especiada
+- Presentación: 100 ml
+- Concentración: Eau de Parfum
+- Género: Masculino
+- Duración: 10 a 14 horas
+- Estela: Potente y duradera
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 85000, compara: 189900, costo: 0,
+      sku: '2258500', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('asad'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+    {
+      id: '212-vip-black-1551986',
+      nombre: '212 Vip Black',
+      desc: `212 VIP BLACK — ID: 1551986
+
+Fragancia masculina moderna, nocturna y sofisticada.
+
+PIRÁMIDE OLFATIVA
+- Salida: Absenta, lavanda, hinojo
+- Corazón: Pimienta negra, cardamomo
+- Fondo: Cuero, vainilla, almizcle, benjuí, ámbar
+
+CARACTERÍSTICAS
+- Familia: Aromática especiada
+- Presentación: 100 ml
+- Concentración: Eau de Parfum
+- Género: Masculino
+- Duración: 8 a 10 horas
+- Estela: Intensa
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 70000, compara: 179900, costo: 0,
+      sku: '1551986', categoria: 'Perfumes', proveedor: 'Itm', stock: 10,
+      tallas: [], colores: [], img: mk('vip212'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* =====================================================
+       SALUD — ZAMIA
+       ===================================================== */
     {
       id: 'zamia-magnesio-10en1-2051082',
       nombre: 'Zamia Magnesio 10 En 1 Full Spectrum',
       desc: `ZAMIA MAGNESIO 10 EN 1 — FULL SPECTRUM COMPLEX — ID: 2051082
 420 mg por porción | 60 cápsulas
 
-El Magnesio 10 en 1 de Zamia es una fórmula avanzada de espectro completo, desarrollada con 10 formas de magnesio de alta biodisponibilidad, diseñada para maximizar la absorción y apoyar múltiples funciones esenciales del organismo.
-
-Ideal para personas que buscan mejor rendimiento diario, equilibrio nervioso, salud muscular y descanso de calidad, todo en un solo suplemento.
+El Magnesio 10 en 1 de Zamia es una fórmula avanzada de espectro completo, desarrollada con 10 formas de magnesio de alta biodisponibilidad.
 
 BENEFICIOS DESTACADOS
 - Apoya el sistema nervioso
@@ -931,24 +1444,14 @@ BENEFICIOS DESTACADOS
 - Favorece la relajación y el descanso nocturno
 - Fórmula de alta absorción y tolerancia
 
-¿POR QUÉ 10 FORMAS DE MAGNESIO?
-A diferencia de los magnesios comunes, esta fórmula combina diferentes sales de magnesio que actúan de manera complementaria, permitiendo una mejor asimilación, mayor efectividad y beneficios integrales.
-
 MODO DE USO
-Tomar 2 cápsulas al día, preferiblemente con una comida, o según recomendación de un profesional de la salud.
+Tomar 2 cápsulas al día, preferiblemente con una comida.
 
-DETALLES DEL PRODUCTO
+DETALLES
 - Contenido: 60 cápsulas
 - Porción: 2 cápsulas
 - Magnesio total por porción: 420 mg
 - Presentación: Cápsulas vegetales
-- Categoría: Suplemento alimenticio
-
-CALIDAD ZAMIA
-- Ingredientes seleccionados
-- Excipientes de grado farmacéutico
-- Producción bajo estándares de calidad
-- Marca reconocida y alta rotación
 
 --------------------------------------------------
 GARANTÍAS
@@ -961,14 +1464,12 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('magnesio'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* CREATINA MONOHIDRATADA ELITE */
     {
       id: 'creatina-elite-300g-2066788',
       nombre: 'Creatina Monohidratada Elite 300g',
       desc: `CREATINA MONOHIDRATADA ELITE — 300g — ID: 2066788
 
-La Creatina Monohidratada Elite 100% pura es un suplemento premium diseñado para potenciar tu rendimiento físico, aumentar la fuerza y mejorar la recuperación muscular. Su fórmula de alta pureza garantiza una absorción eficiente, ideal para deportistas y personas que buscan maximizar su desempeño en cada entrenamiento.
+Suplemento premium para potenciar el rendimiento físico, aumentar la fuerza y mejorar la recuperación muscular.
 
 BENEFICIOS PRINCIPALES
 - Incrementa la fuerza y potencia muscular
@@ -977,21 +1478,13 @@ BENEFICIOS PRINCIPALES
 - Favorece el aumento de masa muscular
 - Mejora la resistencia y el desempeño físico
 
-FÓRMULA DE ALTA CALIDAD
-Elaborada con creatina monohidratada de grado premium, con excelente solubilidad y biodisponibilidad, para resultados visibles y efectivos.
-
 MODO DE USO
-Disolver una porción en agua o bebida de preferencia, idealmente antes o después del entrenamiento.
+Disolver una porción en agua o bebida de preferencia, antes o después del entrenamiento.
 
 PRESENTACIÓN
 - Contenido neto: 300 gramos
 - Textura: Polvo de rápida disolución
-- Suplemento deportivo de uso diario
-
-IDEAL PARA
-- Deportistas y atletas
-- Personas que entrenan en gimnasio o realizan actividad física intensa
-- Quienes buscan mejorar fuerza, resistencia y masa muscular
+- Uso diario
 
 --------------------------------------------------
 GARANTÍAS
@@ -1004,41 +1497,28 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('creatina'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* OMEGA 3 TRIPLE STRENGTH */
     {
       id: 'omega3-triple-strength-2029856',
       nombre: 'Omega 3',
       desc: `OMEGA 3 — TRIPLE STRENGTH — ID: 2029856
-Alta concentración · Máxima absorción
 
-Suplemento alimenticio de Omega 3 de alta potencia, formulado para apoyar el bienestar del cerebro, el corazón y el sistema inmune dentro de una rutina diaria saludable.
-
-Gracias a su fórmula concentrada con EPA + DHA, ofrece un excelente aporte de ácidos grasos esenciales de alta calidad y fácil absorción.
+Suplemento de Omega 3 de alta potencia para el bienestar del cerebro, el corazón y el sistema inmune.
 
 BENEFICIOS PRINCIPALES
 - Apoya el bienestar cerebral y mental
 - Contribuye al cuidado del corazón
 - Favorece el equilibrio del sistema inmune
 - Alta concentración – Triple Strength
-- Excelente absorción y aprovechamiento
+- Excelente absorción
 
 FÓRMULA AVANZADA
 - Omega 3 concentrado
 - EPA + DHA
-- Alta pureza y calidad
 - Softgels fáciles de consumir
 
 PRESENTACIÓN
 - 60 Softgels
 - 1300 mg por porción
-- Suplemento alimenticio
-
-CALIDAD Y CONFIANZA
-- Producto de alta calidad
-- No es medicamento
-- Ideal como complemento diario
-- Fácil de integrar a la rutina
 
 --------------------------------------------------
 GARANTÍAS
@@ -1051,23 +1531,12 @@ GARANTÍAS
       tallas: [], colores: [], img: mk('omega3'),
       badge: 'Nuevo', destacado: false, activo: true
     },
-
-    /* LIPOSOMAL VITAMINA C */
     {
       id: 'liposomal-vitamina-c-2029971',
       nombre: 'Liposomal Vitamina C',
       desc: `LIPOSOMAL VITAMIN C — 2100 MG — ID: 2029971
-Absorción mejorada · Soporte inmune · Fórmula avanzada
 
-Suplemento alimenticio formulado con Vitamina C Liposomal 2100 mg, diseñada para ofrecer una absorción superior y un aprovechamiento más eficiente en el organismo, gracias a su tecnología liposomal.
-
-Ideal para quienes buscan reforzar su rutina de bienestar diario con una forma avanzada de vitamina C.
-
-¿QUÉ HACE ESPECIAL A LA VITAMINA C LIPOSOMAL?
-- Tecnología liposomal que mejora la absorción
-- Protege el nutriente durante la digestión
-- Mayor biodisponibilidad frente a formas tradicionales
-- Suave para el sistema digestivo
+Suplemento con Vitamina C Liposomal 2100 mg, con absorción superior y aprovechamiento más eficiente.
 
 BENEFICIOS CLAVE
 - Apoya el sistema inmunológico
@@ -1084,15 +1553,7 @@ FÓRMULA AVANZADA
 
 PRESENTACIÓN
 - 60 cápsulas
-- Suplemento alimenticio
 - Uso diario
-
-CALIDAD Y CONFIANZA
-- Ingredientes seleccionados
-- Fabricado bajo estándares de calidad
-- No es medicamento
-- No genera dependencia
-- Uso como complemento alimenticio
 
 --------------------------------------------------
 GARANTÍAS
