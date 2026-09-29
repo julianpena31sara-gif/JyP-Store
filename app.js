@@ -160,6 +160,7 @@ function provClass(prov){
   if (p === 'dtech') return 'dtech';
   if (p === 'itm')   return 'itm';
   if (p === 'emdel') return 'emdel';
+  if (p === 'zamia') return 'zamia';
   return '';
 }
 
@@ -243,8 +244,7 @@ function load(){
 }
 
 /**
- * MIGRACIÓN v4: actualiza precios al nuevo margen de ganancia.
- * Se ejecuta una sola vez por navegador.
+ * MIGRACIÓN v5: agrega los 4 productos de Zamia Naturaleza Latina.
  */
 function migrateProducts(){
   /* --- Proveedores (v3) --- */
@@ -310,6 +310,23 @@ function migrateProducts(){
     });
 
     state.settings._migrated_jyp4 = true;
+  }
+
+  /* --- PRODUCTOS ZAMIA NATURALEZA LATINA (v5) --- */
+  if (!state.settings._migrated_jyp5){
+    const demo = demoProducts();
+    const zamiaIds = [
+      'zamia-magnesio-10en1-2051082',
+      'creatina-elite-300g-2066788',
+      'omega3-triple-strength-2029856',
+      'liposomal-vitamina-c-2029971'
+    ];
+    demo.forEach(d => {
+      if (zamiaIds.includes(d.id) && !state.products.find(p => p.id === d.id)){
+        state.products.push(d);
+      }
+    });
+    state.settings._migrated_jyp5 = true;
   }
 
   save();
@@ -747,7 +764,7 @@ GARANTÍAS
     },
 
     /* =========================================================
-       NUEVOS — PROVEEDOR EMDEL
+       EMDEL
        ========================================================= */
 
     /* CANDADO BIOMÉTRICO */
@@ -799,9 +816,7 @@ GARANTÍAS
 Kit de aro de luz profesional para fotografía, selfies, vlogs y streaming. Incluye trípode ajustable de 2.1 metros.
 
 DESCRIPCIÓN
-La luz de anillo de fotografía es ideal para tomar mejores selfies y vlogs personales. Los kits de luz de anillo de selfie agregan suficiente luz a tu rostro cuando grabas video, hacen que tus líneas faciales sean más estereoscópicas y más claras.
-
-Fabricado con materiales plásticos de alta transmisión de luz: ligero, temperatura de color constante y baja pérdida.
+La luz de anillo de fotografía es ideal para tomar mejores selfies y vlogs personales.
 
 CARACTERÍSTICAS
 - Aro de luz de 33 cm de diámetro
@@ -891,6 +906,203 @@ GARANTÍAS
       precio: 50000, compara: 99900, costo: 0,
       sku: '362355', categoria: 'Hogar', proveedor: 'Emdel', stock: 20,
       tallas: [], colores: [], img: mk('bombillo'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* =========================================================
+       ZAMIA NATURALEZA LATINA — SUPLEMENTOS
+       ========================================================= */
+
+    /* ZAMIA MAGNESIO 10 EN 1 */
+    {
+      id: 'zamia-magnesio-10en1-2051082',
+      nombre: 'Zamia Magnesio 10 En 1 Full Spectrum',
+      desc: `ZAMIA MAGNESIO 10 EN 1 — FULL SPECTRUM COMPLEX — ID: 2051082
+420 mg por porción | 60 cápsulas
+
+El Magnesio 10 en 1 de Zamia es una fórmula avanzada de espectro completo, desarrollada con 10 formas de magnesio de alta biodisponibilidad, diseñada para maximizar la absorción y apoyar múltiples funciones esenciales del organismo.
+
+Ideal para personas que buscan mejor rendimiento diario, equilibrio nervioso, salud muscular y descanso de calidad, todo en un solo suplemento.
+
+BENEFICIOS DESTACADOS
+- Apoya el sistema nervioso
+- Contribuye al buen funcionamiento de músculos y huesos
+- Ayuda a mantener la función cardíaca normal
+- Favorece la relajación y el descanso nocturno
+- Fórmula de alta absorción y tolerancia
+
+¿POR QUÉ 10 FORMAS DE MAGNESIO?
+A diferencia de los magnesios comunes, esta fórmula combina diferentes sales de magnesio que actúan de manera complementaria, permitiendo una mejor asimilación, mayor efectividad y beneficios integrales.
+
+MODO DE USO
+Tomar 2 cápsulas al día, preferiblemente con una comida, o según recomendación de un profesional de la salud.
+
+DETALLES DEL PRODUCTO
+- Contenido: 60 cápsulas
+- Porción: 2 cápsulas
+- Magnesio total por porción: 420 mg
+- Presentación: Cápsulas vegetales
+- Categoría: Suplemento alimenticio
+
+CALIDAD ZAMIA
+- Ingredientes seleccionados
+- Excipientes de grado farmacéutico
+- Producción bajo estándares de calidad
+- Marca reconocida y alta rotación
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 50000, compara: 99900, costo: 0,
+      sku: '2051082', categoria: 'Salud', proveedor: 'Zamia', stock: 15,
+      tallas: [], colores: [], img: mk('magnesio'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* CREATINA MONOHIDRATADA ELITE */
+    {
+      id: 'creatina-elite-300g-2066788',
+      nombre: 'Creatina Monohidratada Elite 300g',
+      desc: `CREATINA MONOHIDRATADA ELITE — 300g — ID: 2066788
+
+La Creatina Monohidratada Elite 100% pura es un suplemento premium diseñado para potenciar tu rendimiento físico, aumentar la fuerza y mejorar la recuperación muscular. Su fórmula de alta pureza garantiza una absorción eficiente, ideal para deportistas y personas que buscan maximizar su desempeño en cada entrenamiento.
+
+BENEFICIOS PRINCIPALES
+- Incrementa la fuerza y potencia muscular
+- Mejora el rendimiento en entrenamientos de alta intensidad
+- Acelera la recuperación muscular
+- Favorece el aumento de masa muscular
+- Mejora la resistencia y el desempeño físico
+
+FÓRMULA DE ALTA CALIDAD
+Elaborada con creatina monohidratada de grado premium, con excelente solubilidad y biodisponibilidad, para resultados visibles y efectivos.
+
+MODO DE USO
+Disolver una porción en agua o bebida de preferencia, idealmente antes o después del entrenamiento.
+
+PRESENTACIÓN
+- Contenido neto: 300 gramos
+- Textura: Polvo de rápida disolución
+- Suplemento deportivo de uso diario
+
+IDEAL PARA
+- Deportistas y atletas
+- Personas que entrenan en gimnasio o realizan actividad física intensa
+- Quienes buscan mejorar fuerza, resistencia y masa muscular
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 55000, compara: 109900, costo: 0,
+      sku: '2066788', categoria: 'Salud', proveedor: 'Zamia', stock: 15,
+      tallas: [], colores: [], img: mk('creatina'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* OMEGA 3 TRIPLE STRENGTH */
+    {
+      id: 'omega3-triple-strength-2029856',
+      nombre: 'Omega 3',
+      desc: `OMEGA 3 — TRIPLE STRENGTH — ID: 2029856
+Alta concentración · Máxima absorción
+
+Suplemento alimenticio de Omega 3 de alta potencia, formulado para apoyar el bienestar del cerebro, el corazón y el sistema inmune dentro de una rutina diaria saludable.
+
+Gracias a su fórmula concentrada con EPA + DHA, ofrece un excelente aporte de ácidos grasos esenciales de alta calidad y fácil absorción.
+
+BENEFICIOS PRINCIPALES
+- Apoya el bienestar cerebral y mental
+- Contribuye al cuidado del corazón
+- Favorece el equilibrio del sistema inmune
+- Alta concentración – Triple Strength
+- Excelente absorción y aprovechamiento
+
+FÓRMULA AVANZADA
+- Omega 3 concentrado
+- EPA + DHA
+- Alta pureza y calidad
+- Softgels fáciles de consumir
+
+PRESENTACIÓN
+- 60 Softgels
+- 1300 mg por porción
+- Suplemento alimenticio
+
+CALIDAD Y CONFIANZA
+- Producto de alta calidad
+- No es medicamento
+- Ideal como complemento diario
+- Fácil de integrar a la rutina
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 58000, compara: 119900, costo: 0,
+      sku: '2029856', categoria: 'Salud', proveedor: 'Zamia', stock: 15,
+      tallas: [], colores: [], img: mk('omega3'),
+      badge: 'Nuevo', destacado: false, activo: true
+    },
+
+    /* LIPOSOMAL VITAMINA C */
+    {
+      id: 'liposomal-vitamina-c-2029971',
+      nombre: 'Liposomal Vitamina C',
+      desc: `LIPOSOMAL VITAMIN C — 2100 MG — ID: 2029971
+Absorción mejorada · Soporte inmune · Fórmula avanzada
+
+Suplemento alimenticio formulado con Vitamina C Liposomal 2100 mg, diseñada para ofrecer una absorción superior y un aprovechamiento más eficiente en el organismo, gracias a su tecnología liposomal.
+
+Ideal para quienes buscan reforzar su rutina de bienestar diario con una forma avanzada de vitamina C.
+
+¿QUÉ HACE ESPECIAL A LA VITAMINA C LIPOSOMAL?
+- Tecnología liposomal que mejora la absorción
+- Protege el nutriente durante la digestión
+- Mayor biodisponibilidad frente a formas tradicionales
+- Suave para el sistema digestivo
+
+BENEFICIOS CLAVE
+- Apoya el sistema inmunológico
+- Contribuye a la protección antioxidante
+- Favorece la energía y vitalidad diaria
+- Apoya la producción natural de colágeno
+- Ideal para uso continuo
+
+FÓRMULA AVANZADA
+- Vitamina C Liposomal 2100 mg
+- Complejo liposoluble
+- Cápsulas fáciles de consumir
+- Alta absorción
+
+PRESENTACIÓN
+- 60 cápsulas
+- Suplemento alimenticio
+- Uso diario
+
+CALIDAD Y CONFIANZA
+- Ingredientes seleccionados
+- Fabricado bajo estándares de calidad
+- No es medicamento
+- No genera dependencia
+- Uso como complemento alimenticio
+
+--------------------------------------------------
+GARANTÍAS
+- Producto incompleto · 10 días
+- Mal funcionamiento · 10 días
+- Producto roto · 10 días
+- Producto diferente · 10 días`,
+      precio: 55000, compara: 109900, costo: 0,
+      sku: '2029971', categoria: 'Salud', proveedor: 'Zamia', stock: 15,
+      tallas: [], colores: [], img: mk('liposomal'),
       badge: 'Nuevo', destacado: false, activo: true
     }
   ];
@@ -1002,7 +1214,8 @@ const NAV_ICONS = {
   star:    '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
   tool:    '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
   spray:   '<path d="M9 2h6v4H9z"/><path d="M9 6v14a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V6"/><line x1="17" y1="8" x2="21" y2="8"/><line x1="17" y1="12" x2="19" y2="12"/><line x1="17" y1="16" x2="21" y2="16"/>',
-  shield:  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>'
+  shield:  '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+  pill:    '<path d="M10.5 20.5a7 7 0 0 1-9.9-9.9l7-7a7 7 0 0 1 9.9 9.9l-7 7z"/><line x1="8.5" y1="8.5" x2="15.5" y2="15.5"/>'
 };
 
 function iconForCategory(cat){
@@ -1017,6 +1230,7 @@ function iconForCategory(cat){
   if (c.includes('herramient'))                         return 'tool';
   if (c.includes('perfum') || c.includes('fraganc'))    return 'spray';
   if (c.includes('seguridad'))                          return 'shield';
+  if (c.includes('salud') || c.includes('suplement'))   return 'pill';
   if (c.includes('oferta'))                             return 'tag';
   return 'star';
 }
